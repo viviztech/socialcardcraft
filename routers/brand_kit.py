@@ -8,7 +8,7 @@ from models.database import get_db
 from models.user import User
 from models.brand_kit import BrandKit
 from services.auth_service import get_current_user
-from services.s3_service import upload_file_to_s3
+from services.upload_service import upload_file
 from services.font_service import get_all_languages
 
 router = APIRouter(prefix="/brand-kit", tags=["brand-kit"])
@@ -63,7 +63,7 @@ async def brand_kit_create(
     logo_url = None
     if logo and logo.filename:
         content = await logo.read()
-        logo_url = upload_file_to_s3(content, logo.filename, logo.content_type, "logos")
+        logo_url = upload_file(content, logo.filename, logo.content_type, "logos")
 
     kit = BrandKit(
         user_id=current_user.id,

@@ -115,8 +115,8 @@ async def generate_image(
         height=req.height,
     )
     if img_bytes:
-        from services.s3_service import upload_file_to_s3
-        url = upload_file_to_s3(img_bytes, "ai_generated.png", "image/png", "ai-images")
+        from services.upload_service import upload_file
+        url = upload_file(img_bytes, "ai_generated.png", "image/png", "ai-images")
         return JSONResponse({"url": url, "provider": ai_service.IMAGE_GEN_PROVIDER, "enhanced_prompt": enhanced_prompt})
     return JSONResponse({"url": None, "provider": "none", "enhanced_prompt": enhanced_prompt, "message": "No image provider configured. Add STABILITY_API_KEY or REPLICATE_API_TOKEN to .env"})
 

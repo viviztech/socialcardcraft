@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from typing import Optional, List
 from datetime import datetime
 import json
+import os
 from pathlib import Path
 
 from services.font_service import get_font_config, get_google_fonts_url
@@ -19,7 +20,7 @@ from models.user import User
 from models.brand_kit import BrandKit
 from models.export_job import ExportJob
 from services.auth_service import get_current_user, reset_daily_exports_if_needed
-from services.s3_service import upload_file_to_s3, upload_local_file_to_s3
+from services.upload_service import upload_file
 from services.platform_sizes import get_sizes_by_platform, PLATFORM_SIZES
 from services.font_service import get_all_languages
 from services.renderer import generate_cards_zip
@@ -113,7 +114,7 @@ async def generate_cards(
     featured_image_url = None
     if featured_image and featured_image.filename:
         content_bytes = await featured_image.read()
-        featured_image_url = upload_file_to_s3(content_bytes, featured_image.filename, featured_image.content_type, "featured")
+        featured_image_url = upload_file(content_bytes, featured_image.filename, featured_image.content_type, "featured")
 
     job = ExportJob(
         user_id=current_user.id,
@@ -204,13 +205,14 @@ async def card_preview(
     subtitle: str = "",
     content: str = "",
     lang: str = "english",
-    kit_id: Optional[int] = None,
+    kit_id: str = "",
     w: int = 1080,
     h: int = 1080,
     img: str = "",
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+    kit_id_int: Optional[int] = int(kit_id) if kit_id and kit_id.isdigit() else None
     font_config = get_font_config(lang)
     fonts_url = get_google_fonts_url(lang)
 
@@ -230,9 +232,9 @@ async def card_preview(
         "website": "www.yourbrand.com",
     }
 
-    if kit_id:
+    if kit_id_int:
         from models.brand_kit import BrandKit
-        kit = db.query(BrandKit).filter(BrandKit.id == kit_id, BrandKit.user_id == current_user.id).first()
+        kit = db.query(BrandKit).filter(BrandKit.id == kit_id_int, BrandKit.user_id == current_user.id).first()
         if kit:
             brand_dict = {
                 "name": kit.name,
@@ -325,8 +327,17 @@ async def process_export_job(
             language=language,
         )
 
-        s3_key = f"exports/job_{job_id}.zip"
-        zip_url = upload_local_file_to_s3(zip_path, s3_key, "application/zip")
+        # Try S3, serve locally if not configured
+        try:
+            from services.s3_service import upload_local_file_to_s3
+            aws_key = os.getenv("AWS_ACCESS_KEY_ID", "")
+            if aws_key and not aws_key.startswith("REPLACE") and not aws_key.startswith("your"):
+                s3_key = f"exports/job_{job_id}.zip"
+                zip_url = upload_local_file_to_s3(zip_path, s3_key, "application/zip")
+            else:
+                raise ValueError("S3 not configured")
+        except Exception:
+            zip_url = f"/exports/{zip_path.split('exports/')[-1]}" if "exports/" in zip_path else f"/exports/job_{job_id}.zip"
 
         job.status = "done"
         job.zip_url = zip_url
