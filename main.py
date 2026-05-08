@@ -3,6 +3,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import RedirectResponse
 from contextlib import asynccontextmanager
+from sqlalchemy.exc import OperationalError, IntegrityError
 import os
 from dotenv import load_dotenv
 
@@ -14,7 +15,10 @@ load_dotenv()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    Base.metadata.create_all(bind=engine)
+    try:
+        Base.metadata.create_all(bind=engine, checkfirst=True)
+    except Exception as e:
+        print(f"[startup] DB init warning: {e}")
     await create_default_admin()
     yield
 
@@ -29,15 +33,20 @@ async def create_default_admin():
         admin_email = os.getenv("ADMIN_EMAIL", "admin@socialcardcraft.com")
         existing = db.query(User).filter(User.email == admin_email).first()
         if not existing:
-            admin = User(
+            admin_user = User(
                 name="Admin",
                 email=admin_email,
                 hashed_password=hash_password(os.getenv("ADMIN_PASSWORD", "Admin@1234")),
                 is_admin=True,
                 plan="pro",
             )
-            db.add(admin)
+            db.add(admin_user)
             db.commit()
+    except (IntegrityError, OperationalError):
+        db.rollback()
+    except Exception as e:
+        print(f"[startup] Admin create warning: {e}")
+        db.rollback()
     finally:
         db.close()
 
@@ -65,5 +74,5 @@ async def root(request: Request):
 
 if __name__ == "__main__":
     import uvicorn
-    port = int(os.getenv("PORT", 8010))
+    port = int(os.getenv("PORT", 8013))
     uvicorn.run("main:app", host="0.0.0.0", port=port, reload=True)
