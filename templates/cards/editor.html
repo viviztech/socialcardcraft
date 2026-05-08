@@ -3,333 +3,530 @@
 
 {% block head %}
 <style>
+  /* ── Layout ──────────────────────────────────────────────────────── */
+  .editor-grid {
+    display: grid;
+    grid-template-columns: 380px 1fr;
+    gap: 1.5rem;
+    align-items: start;
+  }
+  .left-col {
+    display: flex; flex-direction: column; gap: 0.875rem;
+    max-height: calc(100vh - 90px);
+    overflow-y: auto;
+    padding-right: 2px;
+    position: sticky;
+    top: 1.5rem;
+  }
+  .right-col { display: flex; flex-direction: column; gap: 0.875rem; }
+
+  /* ── Step cards ──────────────────────────────────────────────────── */
+  .step-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 1rem;
+    overflow: hidden;
+  }
+  .step-header {
+    display: flex; align-items: center; gap: 0.75rem;
+    padding: 0.875rem 1.125rem;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.15s;
+  }
+  .step-header:hover { background: var(--bg-hover); }
+  .step-num {
+    width: 1.5rem; height: 1.5rem; border-radius: 0.5rem;
+    background: #6366f1; color: #fff;
+    font-size: 0.65rem; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .step-title {
+    font-size: 0.8rem; font-weight: 600;
+    color: var(--text-primary);
+    font-family: 'Poppins', sans-serif;
+    flex: 1;
+  }
+  .step-badge {
+    font-size: 0.65rem; font-weight: 600; padding: 0.15rem 0.5rem;
+    border-radius: 0.4rem; background: rgba(99,102,241,0.15); color: #818cf8;
+    display: none;
+  }
+  .step-badge.show { display: inline-block; }
+  .step-chevron {
+    width: 1rem; height: 1rem; color: var(--text-muted);
+    transition: transform 0.2s; flex-shrink: 0;
+  }
+  .step-card.collapsed .step-chevron { transform: rotate(-90deg); }
+  .step-body { padding: 0 1.125rem 1.125rem; }
+  .step-card.collapsed .step-body { display: none; }
+  .step-divider { height: 1px; background: var(--border); margin: 0 1.125rem; }
+
+  /* ── AI bar ──────────────────────────────────────────────────────── */
+  .ai-bar {
+    background: linear-gradient(135deg, rgba(124,58,237,0.1), rgba(79,70,229,0.08));
+    border: 1px solid rgba(124,58,237,0.2);
+    border-radius: 1rem; padding: 1rem 1.125rem;
+  }
+  [data-theme="light"] .ai-bar {
+    background: linear-gradient(135deg, #f5f3ff, #eef2ff);
+    border-color: #c4b5fd;
+  }
+  .ai-bar-title {
+    font-size: 0.75rem; font-weight: 700; color: #a78bfa;
+    font-family: 'Poppins', sans-serif;
+    display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.625rem;
+  }
+  [data-theme="light"] .ai-bar-title { color: #7c3aed; }
+
+  /* ── AI writer panel ─────────────────────────────────────────────── */
+  .ai-writer {
+    background: rgba(124,58,237,0.06);
+    border: 1px solid rgba(124,58,237,0.15);
+    border-radius: 0.75rem; padding: 0.875rem; margin-bottom: 1rem;
+  }
+  [data-theme="light"] .ai-writer {
+    background: #f5f3ff; border-color: #ddd6fe;
+  }
+
+  /* ── Buttons ─────────────────────────────────────────────────────── */
   .ai-btn {
-    display: inline-flex; align-items: center; gap: 0.4rem;
+    display: inline-flex; align-items: center; gap: 0.35rem;
     background: linear-gradient(135deg, #7c3aed, #4f46e5);
     color: #fff; font-size: 0.7rem; font-weight: 600;
-    padding: 0.35rem 0.75rem; border-radius: 0.5rem;
-    border: none; cursor: pointer; transition: opacity 0.15s;
-    white-space: nowrap;
+    padding: 0.4rem 0.875rem; border-radius: 0.5rem;
+    border: none; cursor: pointer; transition: opacity 0.15s, transform 0.1s;
+    white-space: nowrap; flex-shrink: 0;
   }
-  .ai-btn:hover { opacity: 0.85; }
-  .ai-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+  .ai-btn:hover { opacity: 0.88; transform: translateY(-1px); }
+  .ai-btn:active { transform: translateY(0); }
+  .ai-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
   .ai-btn.loading::after {
-    content: ''; display: inline-block; width: 10px; height: 10px;
-    border: 2px solid rgba(255,255,255,0.4); border-top-color: #fff;
-    border-radius: 50%; animation: spin 0.7s linear infinite; margin-left: 4px;
+    content: ''; display: inline-block; width: 9px; height: 9px;
+    border: 2px solid rgba(255,255,255,0.35); border-top-color: #fff;
+    border-radius: 50%; animation: spin 0.7s linear infinite; margin-left: 3px;
   }
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  .ai-panel {
-    background: rgba(124,58,237,0.08);
-    border: 1px solid rgba(124,58,237,0.25);
-    border-radius: 0.875rem; padding: 1rem; margin-bottom: 1.25rem;
+  .tone-pill {
+    font-size: 0.65rem; font-weight: 600; padding: 0.25rem 0.625rem;
+    border-radius: 999px; cursor: pointer; border: 1px solid var(--border);
+    background: transparent; color: var(--text-secondary);
+    transition: all 0.15s;
+  }
+  .tone-pill:hover { border-color: #818cf8; color: #818cf8; }
+  .tone-pill.active {
+    background: #6366f1; color: #fff; border-color: #6366f1;
   }
 
-  .tone-btn {
-    font-size: 0.7rem; padding: 0.3rem 0.75rem; border-radius: 0.5rem;
-    border: 1px solid rgba(255,255,255,0.12); cursor: pointer;
-    background: transparent; color: #94a3b8; transition: all 0.15s;
+  /* ── Template grid ───────────────────────────────────────────────── */
+  .tpl-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 0.5rem; }
+  .tpl-card {
+    border: 1.5px solid var(--border); border-radius: 0.75rem;
+    padding: 0.625rem 0.25rem; text-align: center; cursor: pointer;
+    transition: all 0.15s; background: var(--bg-input);
   }
-  .tone-btn:hover, .tone-btn.active { background: rgba(99,102,241,0.2); color: #a5b4fc; border-color: rgba(99,102,241,0.4); }
+  .tpl-card:hover { border-color: #818cf8; background: rgba(99,102,241,0.06); }
+  .tpl-card.selected {
+    border-color: #6366f1; background: rgba(99,102,241,0.12);
+    box-shadow: 0 0 0 3px rgba(99,102,241,0.15);
+  }
+  .tpl-icon { font-size: 1.25rem; line-height: 1; margin-bottom: 0.25rem; }
+  .tpl-name { font-size: 0.6rem; font-weight: 600; color: var(--text-secondary); }
 
-  .provider-badge {
-    font-size: 0.6rem; font-weight: 600; padding: 0.2rem 0.5rem;
-    border-radius: 0.4rem; margin-left: 0.5rem; vertical-align: middle;
+  /* ── Platform sizes ──────────────────────────────────────────────── */
+  .platform-group { margin-bottom: 0.75rem; }
+  .platform-name-label {
+    font-size: 0.6rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.1em; color: var(--text-muted);
+    margin-bottom: 0.375rem; display: flex; align-items: center; gap: 0.4rem;
   }
-  .provider-claude  { background: rgba(245,158,11,0.15); color: #fbbf24; }
-  .provider-openai  { background: rgba(16,185,129,0.15); color: #34d399; }
-  .provider-ollama  { background: rgba(59,130,246,0.15); color: #60a5fa; }
-  .provider-fallback{ background: rgba(100,116,139,0.15); color: #94a3b8; }
+  .size-chips { display: flex; flex-wrap: wrap; gap: 0.375rem; }
+  .size-chip {
+    font-size: 0.65rem; font-weight: 500; cursor: pointer;
+    padding: 0.3rem 0.625rem; border-radius: 0.5rem;
+    border: 1.5px solid var(--border); color: var(--text-secondary);
+    background: var(--bg-input); transition: all 0.15s; white-space: nowrap;
+    display: flex; align-items: center; gap: 0.3rem;
+  }
+  .size-chip:hover { border-color: #818cf8; color: #818cf8; }
+  .size-chip.selected {
+    background: rgba(99,102,241,0.15); border-color: #6366f1; color: #818cf8;
+  }
+  .size-chip .size-dims { color: var(--text-muted); font-size: 0.58rem; }
+  .size-chip.selected .size-dims { color: #a5b4fc; }
 
-  .caption-platform {
-    border: 1px solid rgba(255,255,255,0.08); border-radius: 0.75rem;
-    padding: 0.875rem; margin-bottom: 0.75rem;
+  /* ── Preview ─────────────────────────────────────────────────────── */
+  .preview-wrap {
+    background: var(--preview-bg);
+    border-radius: 0.875rem; padding: 1.5rem;
+    min-height: 360px; display: flex; align-items: center; justify-content: center;
+    position: relative;
   }
-  .caption-platform .platform-name {
-    font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
-    letter-spacing: 0.08em; color: #64748b; margin-bottom: 0.5rem;
+  .preview-size-btn {
+    font-size: 0.65rem; font-weight: 600; padding: 0.3rem 0.75rem;
+    border-radius: 0.5rem; border: 1px solid var(--border);
+    background: var(--bg-input); color: var(--text-secondary);
+    cursor: pointer; transition: all 0.15s;
   }
-  .caption-text {
-    font-size: 0.8rem; color: #cbd5e1; line-height: 1.5; white-space: pre-wrap; margin-bottom: 0.5rem;
+  .preview-size-btn:hover, .preview-size-btn.active {
+    background: rgba(99,102,241,0.15); border-color: #6366f1; color: #818cf8;
   }
-  .hashtags { display: flex; flex-wrap: wrap; gap: 0.3rem; }
-  .hashtag {
-    font-size: 0.65rem; background: rgba(99,102,241,0.15); color: #a5b4fc;
-    padding: 0.2rem 0.5rem; border-radius: 0.4rem;
-  }
-  .copy-btn {
-    font-size: 0.65rem; color: #64748b; background: none; border: none;
-    cursor: pointer; padding: 0.2rem 0.5rem; border-radius: 0.4rem;
-    transition: color 0.15s;
-  }
-  .copy-btn:hover { color: #a5b4fc; }
 
-  .recommend-result {
+  /* ── Image tabs ──────────────────────────────────────────────────── */
+  .img-tab-bar {
+    display: flex; gap: 0.25rem; padding: 0.25rem;
+    background: var(--bg-input); border: 1px solid var(--border);
+    border-radius: 0.625rem; width: fit-content; margin-bottom: 0.75rem;
+  }
+  .img-tab {
+    font-size: 0.7rem; font-weight: 600; padding: 0.35rem 0.875rem;
+    border-radius: 0.4rem; border: none; cursor: pointer;
+    background: transparent; color: var(--text-secondary);
+    transition: all 0.15s;
+  }
+  .img-tab.active { background: #6366f1; color: #fff; }
+  .img-tab-content { display: none; }
+  .img-tab-content.active { display: block; }
+
+  /* ── Generate bar ────────────────────────────────────────────────── */
+  .generate-bar {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: 1rem; padding: 1rem 1.25rem;
+    display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+    position: sticky; bottom: 1rem; z-index: 10;
+  }
+  .generate-btn {
+    display: flex; align-items: center; gap: 0.5rem;
+    background: linear-gradient(135deg, #6366f1, #4f46e5);
+    color: #fff; font-size: 0.875rem; font-weight: 700;
+    padding: 0.75rem 1.75rem; border-radius: 0.75rem;
+    border: none; cursor: pointer;
+    box-shadow: 0 4px 20px rgba(99,102,241,0.35);
+    transition: all 0.15s; white-space: nowrap; flex-shrink: 0;
+    font-family: 'Poppins', sans-serif;
+  }
+  .generate-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(99,102,241,0.45); }
+  .generate-btn:active { transform: translateY(0); }
+
+  /* ── Recommend result ────────────────────────────────────────────── */
+  .rec-result {
+    margin-top: 0.625rem; padding: 0.75rem;
     background: rgba(99,102,241,0.08); border: 1px solid rgba(99,102,241,0.2);
-    border-radius: 0.75rem; padding: 0.875rem; margin-top: 0.75rem;
-    display: none;
+    border-radius: 0.625rem; display: none;
   }
+  [data-theme="light"] .rec-result { background: #eef2ff; border-color: #c7d2fe; }
 
-  .tab-btn {
-    flex: 1; padding: 0.6rem; font-size: 0.75rem; font-weight: 600;
-    border: none; cursor: pointer; border-radius: 0.5rem;
-    transition: all 0.15s; background: transparent; color: #64748b;
-  }
-  .tab-btn.active { background: rgba(99,102,241,0.2); color: #a5b4fc; }
+  /* ── Scrollbar ───────────────────────────────────────────────────── */
+  .left-col::-webkit-scrollbar { width: 4px; }
+  .left-col::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
-  .image-tab-content { display: none; }
-  .image-tab-content.active { display: block; }
+  /* ── Responsive helpers ──────────────────────────────────────────── */
+  .field-group { display: flex; flex-direction: column; gap: 0.875rem; }
+  .char-count { font-size: 0.6rem; color: var(--text-muted); text-align: right; margin-top: 0.2rem; }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="p-6">
-  <div class="flex items-center justify-between mb-6">
+<div style="padding: 1.25rem 1.5rem 6rem">
+
+  <!-- ── Page header ── -->
+  <div class="flex items-center justify-between mb-5">
     <div>
-      <h1 style="font-family:'Poppins',sans-serif" class="text-xl font-bold text-white">Card Editor</h1>
-      <p class="text-slate-400 text-sm mt-1">Design cards for every social media platform</p>
+      <h1 style="font-family:'Poppins',sans-serif;font-size:1.25rem;font-weight:700;color:var(--text-primary)">
+        Card Editor
+      </h1>
+      <p style="font-size:0.8rem;color:var(--text-secondary);margin-top:0.2rem">
+        Design once, export to every platform instantly
+      </p>
     </div>
     <div class="flex items-center gap-3">
-      <span id="provider-indicator" class="text-xs text-slate-500"></span>
+      <span id="provider-indicator" style="font-size:0.7rem;color:var(--text-muted)"></span>
       {% if user.plan == 'free' %}
-      <div class="text-xs text-slate-400 px-4 py-2 rounded-xl" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1)">
-        {{ exports_today }}/{{ free_limit }} free exports today
+      <div style="font-size:0.7rem;color:var(--text-secondary);padding:0.4rem 0.875rem;border-radius:0.625rem;background:var(--bg-input);border:1px solid var(--border)">
+        <span style="color:#6366f1;font-weight:600">{{ exports_today }}</span>/{{ free_limit }} exports today
       </div>
       {% endif %}
     </div>
   </div>
 
-  <!-- AI RECOMMENDER BAR -->
-  <div class="ai-panel mb-6">
-    <div class="flex items-center gap-2 mb-3">
-      <span style="font-size:1rem">🤖</span>
-      <span class="text-sm font-semibold text-white" style="font-family:'Poppins',sans-serif">AI Template Recommender</span>
-      <span class="text-xs text-slate-500">— Describe your card and AI picks the best template + colors</span>
-    </div>
+  <!-- ── AI Recommender bar ── -->
+  <div class="ai-bar mb-5">
+    <div class="ai-bar-title">🤖 AI Template Recommender</div>
     <div class="flex gap-2">
-      <input type="text" id="recommend-input" placeholder="e.g. Diwali sale 40% off on all products..." class="input-field flex-1" style="padding:0.5rem 0.875rem">
+      <input type="text" id="recommend-input"
+        placeholder="Describe your card goal… e.g. Diwali sale 40% off on all kurtas"
+        class="input-field flex-1" style="font-size:0.8rem;padding:0.5rem 0.875rem">
       <button type="button" onclick="runRecommender()" class="ai-btn" id="recommend-btn">
         ✨ Recommend
       </button>
     </div>
-    <div class="recommend-result" id="recommend-result">
-      <div class="flex items-center justify-between mb-2">
-        <span class="text-xs font-semibold text-indigo-300" id="recommend-reason"></span>
-        <button type="button" onclick="applyRecommendation()" class="ai-btn" style="font-size:0.65rem;padding:0.25rem 0.6rem">Apply →</button>
+    <div class="rec-result" id="recommend-result">
+      <div class="flex items-center justify-between mb-1.5">
+        <span style="font-size:0.72rem;font-weight:600;color:#818cf8" id="recommend-reason"></span>
+        <button type="button" onclick="applyRecommendation()" class="ai-btn" style="font-size:0.62rem;padding:0.2rem 0.6rem">Apply →</button>
       </div>
-      <div class="flex gap-3 text-xs text-slate-400">
-        <span>Template: <strong class="text-white" id="rec-template"></strong></span>
-        <span>Colors: <span id="rec-primary" class="inline-block w-3 h-3 rounded-full align-middle ml-1"></span><span id="rec-accent" class="inline-block w-3 h-3 rounded-full align-middle ml-1"></span></span>
+      <div style="display:flex;gap:1rem;font-size:0.68rem;color:var(--text-muted)">
+        <span>Template: <strong style="color:var(--text-primary)" id="rec-template"></strong></span>
+        <span style="display:flex;align-items:center;gap:0.3rem">
+          Colors:
+          <span id="rec-primary" style="display:inline-block;width:12px;height:12px;border-radius:50%;border:1px solid var(--border)"></span>
+          <span id="rec-accent"  style="display:inline-block;width:12px;height:12px;border-radius:50%;border:1px solid var(--border)"></span>
+        </span>
       </div>
     </div>
   </div>
 
   <form method="POST" action="/cards/generate" enctype="multipart/form-data" id="card-form">
-    <div class="grid gap-6" style="grid-template-columns: 2fr 3fr">
+    <div class="editor-grid">
 
-      <!-- LEFT PANEL -->
-      <div style="display:flex;flex-direction:column;gap:1.25rem;max-height:calc(100vh - 200px);overflow-y:auto;padding-right:4px">
+      <!-- ════ LEFT COLUMN ════ -->
+      <div class="left-col">
 
         <!-- 1. Brand Kit -->
-        <div class="card-glass p-5">
-          <h2 class="text-sm font-semibold text-white mb-4 flex items-center gap-2" style="font-family:'Poppins',sans-serif">
-            <span class="w-6 h-6 rounded-lg flex items-center justify-center text-indigo-400 text-xs font-bold flex-shrink-0" style="background:rgba(99,102,241,0.2)">1</span>
-            Brand Kit
-          </h2>
-          {% if brand_kits %}
-          <select name="brand_kit_id" id="brand_kit_id" class="input-field" required onchange="updatePreview()">
-            {% for kit in brand_kits %}
-            <option value="{{ kit.id }}"
-              data-name="{{ kit.name }}"
-              data-primary="{{ kit.primary_color }}"
-              data-accent="{{ kit.accent_color }}"
-              {% if selected_kit and kit.id == selected_kit.id %}selected{% endif %}>
-              {{ kit.name }}{% if kit.is_default %} (Default){% endif %}
-            </option>
-            {% endfor %}
-          </select>
-          {% else %}
-          <p class="text-slate-500 text-sm mb-3">No brand kits yet.</p>
-          <a href="/brand-kit/new" class="btn-primary text-sm py-2 px-4">+ Create Brand Kit</a>
-          {% endif %}
+        <div class="step-card" id="sc-brand">
+          <div class="step-header" onclick="toggleStep('brand')">
+            <div class="step-num">1</div>
+            <span class="step-title">Brand Kit</span>
+            <span class="step-badge show" id="badge-brand">{% if selected_kit %}{{ selected_kit.name }}{% else %}None{% endif %}</span>
+            <svg class="step-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </div>
+          <div class="step-divider"></div>
+          <div class="step-body" style="padding-top:0.875rem">
+            {% if brand_kits %}
+            <select name="brand_kit_id" id="brand_kit_id" class="input-field" required onchange="onKitChange()">
+              {% for kit in brand_kits %}
+              <option value="{{ kit.id }}"
+                data-name="{{ kit.name }}"
+                data-primary="{{ kit.primary_color }}"
+                data-accent="{{ kit.accent_color }}"
+                {% if selected_kit and kit.id == selected_kit.id %}selected{% endif %}>
+                {{ kit.name }}{% if kit.is_default %} ★{% endif %}
+              </option>
+              {% endfor %}
+            </select>
+            <a href="/brand-kit/new" style="display:inline-block;margin-top:0.5rem;font-size:0.68rem;color:#6366f1;text-decoration:none">+ Add new brand kit</a>
+            {% else %}
+            <p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:0.75rem">No brand kits yet.</p>
+            <a href="/brand-kit/new" class="btn-primary" style="font-size:0.78rem;padding:0.5rem 1rem">+ Create Brand Kit</a>
+            {% endif %}
+          </div>
         </div>
 
         <!-- 2. Template Style -->
-        <div class="card-glass p-5">
-          <h2 class="text-sm font-semibold text-white mb-4 flex items-center gap-2" style="font-family:'Poppins',sans-serif">
-            <span class="w-6 h-6 rounded-lg flex items-center justify-center text-indigo-400 text-xs font-bold flex-shrink-0" style="background:rgba(99,102,241,0.2)">2</span>
-            Template Style
-          </h2>
-          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0.5rem">
-            {% for tpl in card_templates %}
-            <div onclick="selectTemplate('{{ tpl.key }}', this)">
-              <input type="radio" name="card_template" value="{{ tpl.key }}" id="tpl_{{ tpl.key }}" style="display:none" {% if loop.first %}checked{% endif %}>
-              <label for="tpl_{{ tpl.key }}" class="template-card {% if loop.first %}selected{% endif %}" style="display:block;cursor:pointer">
-                <div style="font-size:1.5rem;margin-bottom:0.25rem">{{ tpl.icon }}</div>
-                <div class="text-xs font-semibold text-white">{{ tpl.label }}</div>
-                <div class="text-xs text-slate-500 mt-0.5">{{ tpl.desc }}</div>
-              </label>
+        <div class="step-card" id="sc-template">
+          <div class="step-header" onclick="toggleStep('template')">
+            <div class="step-num">2</div>
+            <span class="step-title">Template Style</span>
+            <span class="step-badge show" id="badge-template">Announcement</span>
+            <svg class="step-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </div>
+          <div class="step-divider"></div>
+          <div class="step-body" style="padding-top:0.875rem">
+            <div class="tpl-grid">
+              {% for tpl in card_templates %}
+              <div class="tpl-card {% if loop.first %}selected{% endif %}" id="tpl-card-{{ tpl.key }}"
+                onclick="selectTemplate('{{ tpl.key }}', '{{ tpl.label }}')">
+                <input type="radio" name="card_template" value="{{ tpl.key }}" id="tpl_{{ tpl.key }}"
+                  style="display:none" {% if loop.first %}checked{% endif %}>
+                <div class="tpl-icon">{{ tpl.icon }}</div>
+                <div class="tpl-name">{{ tpl.label }}</div>
+              </div>
+              {% endfor %}
             </div>
-            {% endfor %}
           </div>
         </div>
 
         <!-- 3. Language -->
-        <div class="card-glass p-5">
-          <h2 class="text-sm font-semibold text-white mb-4 flex items-center gap-2" style="font-family:'Poppins',sans-serif">
-            <span class="w-6 h-6 rounded-lg flex items-center justify-center text-indigo-400 text-xs font-bold flex-shrink-0" style="background:rgba(99,102,241,0.2)">3</span>
-            Language &amp; Font
-          </h2>
-          <select name="language" id="language_select" class="input-field" onchange="updatePreview()">
-            {% for key, label in languages.items() %}
-            <option value="{{ key }}">{{ label }}</option>
-            {% endfor %}
-          </select>
-          <p class="text-xs text-slate-600 mt-2">Google Fonts Indic script rendering</p>
+        <div class="step-card" id="sc-lang">
+          <div class="step-header" onclick="toggleStep('lang')">
+            <div class="step-num">3</div>
+            <span class="step-title">Language & Font</span>
+            <span class="step-badge show" id="badge-lang">English</span>
+            <svg class="step-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </div>
+          <div class="step-divider"></div>
+          <div class="step-body" style="padding-top:0.875rem">
+            <select name="language" id="language_select" class="input-field" onchange="onLangChange()">
+              {% for key, label in languages.items() %}
+              <option value="{{ key }}">{{ label }}</option>
+              {% endfor %}
+            </select>
+            <p style="font-size:0.65rem;color:var(--text-muted);margin-top:0.4rem">Google Fonts — authentic Indic script rendering</p>
+          </div>
         </div>
 
         <!-- 4. Platform Sizes -->
-        <div class="card-glass p-5">
-          <h2 class="text-sm font-semibold text-white mb-2 flex items-center gap-2" style="font-family:'Poppins',sans-serif">
-            <span class="w-6 h-6 rounded-lg flex items-center justify-center text-indigo-400 text-xs font-bold flex-shrink-0" style="background:rgba(99,102,241,0.2)">4</span>
-            Platform Sizes
-          </h2>
-          <div class="flex gap-2 mb-3 mt-2">
-            <button type="button" onclick="selectAll()" class="text-xs text-indigo-400 px-3 py-1.5 rounded-lg" style="background:rgba(99,102,241,0.1)">Select All</button>
-            <button type="button" onclick="clearAll()" class="text-xs text-slate-400 px-3 py-1.5 rounded-lg" style="background:rgba(255,255,255,0.05)">Clear</button>
+        <div class="step-card" id="sc-sizes">
+          <div class="step-header" onclick="toggleStep('sizes')">
+            <div class="step-num">4</div>
+            <span class="step-title">Platform Sizes</span>
+            <span class="step-badge" id="badge-sizes">0 selected</span>
+            <svg class="step-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
           </div>
-          {% for platform, sizes in platforms.items() %}
-          <p class="platform-title">{{ platform }}</p>
-          <div style="display:flex;flex-direction:column;gap:0.375rem;margin-bottom:0.25rem">
-            {% for size in sizes %}
-            <div class="size-label" id="lbl_{{ size.key }}" onclick="toggleSize('{{ size.key }}', this)">
-              <span>{{ size.label }}</span>
-              <span style="font-family:monospace;color:#475569;font-size:0.7rem">{{ size.width }}×{{ size.height }}</span>
+          <div class="step-divider"></div>
+          <div class="step-body" style="padding-top:0.875rem">
+            <div class="flex gap-2 mb-3">
+              <button type="button" onclick="selectAll()" style="font-size:0.65rem;font-weight:600;padding:0.3rem 0.75rem;border-radius:0.5rem;border:1px solid rgba(99,102,241,0.3);background:rgba(99,102,241,0.1);color:#818cf8;cursor:pointer">Select All</button>
+              <button type="button" onclick="clearAll()" style="font-size:0.65rem;font-weight:600;padding:0.3rem 0.75rem;border-radius:0.5rem;border:1px solid var(--border);background:var(--bg-input);color:var(--text-muted);cursor:pointer">Clear</button>
+            </div>
+            {% for platform, sizes in platforms.items() %}
+            <div class="platform-group">
+              <div class="platform-name-label">
+                {% if platform == 'Instagram' %}📸{% elif platform == 'Facebook' %}📘{% elif platform == 'X (Twitter)' %}𝕏{% elif platform == 'LinkedIn' %}💼{% elif platform == 'YouTube' %}▶️{% elif platform == 'Pinterest' %}📌{% elif platform == 'WhatsApp' %}📱{% else %}🌐{% endif %}
+                {{ platform }}
+              </div>
+              <div class="size-chips">
+                {% for size in sizes %}
+                <div class="size-chip" id="lbl_{{ size.key }}" onclick="toggleSize('{{ size.key }}', this)">
+                  {{ size.aspect }}
+                  <span class="size-dims">{{ size.width }}×{{ size.height }}</span>
+                </div>
+                {% endfor %}
+              </div>
             </div>
             {% endfor %}
+            <input type="hidden" name="selected_sizes" id="selected_sizes_input" value="[]">
           </div>
-          {% endfor %}
-          <input type="hidden" name="selected_sizes" id="selected_sizes_input" value="[]">
         </div>
-      </div>
 
-      <!-- RIGHT PANEL -->
-      <div style="display:flex;flex-direction:column;gap:1.25rem">
+      </div><!-- end left-col -->
 
-        <!-- 5. Card Content + AI Writer -->
-        <div class="card-glass p-5">
-          <div class="flex items-center justify-between mb-4">
-            <h2 class="text-sm font-semibold text-white flex items-center gap-2" style="font-family:'Poppins',sans-serif">
-              <span class="w-6 h-6 rounded-lg flex items-center justify-center text-indigo-400 text-xs font-bold flex-shrink-0" style="background:rgba(99,102,241,0.2)">5</span>
-              Card Content
-            </h2>
+      <!-- ════ RIGHT COLUMN ════ -->
+      <div class="right-col">
+
+        <!-- 5. Card Content -->
+        <div class="step-card" id="sc-content">
+          <div class="step-header" onclick="toggleStep('content')">
+            <div class="step-num">5</div>
+            <span class="step-title">Card Content</span>
+            <svg class="step-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
           </div>
+          <div class="step-divider"></div>
+          <div class="step-body" style="padding-top:0.875rem">
 
-          <!-- AI Writer -->
-          <div class="ai-panel" style="margin-bottom:1rem">
-            <div class="flex items-center gap-2 mb-2">
-              <span style="font-size:0.85rem">✨</span>
-              <span class="text-xs font-semibold text-purple-300">AI Content Writer</span>
-            </div>
-            <div class="flex gap-2 mb-2">
-              <input type="text" id="ai-topic" placeholder="Topic, product name, or event..." class="input-field flex-1" style="padding:0.5rem 0.875rem;font-size:0.8rem">
-              <button type="button" onclick="runContentWriter()" class="ai-btn" id="content-write-btn">
-                ✨ Write
-              </button>
-            </div>
-            <div class="flex gap-1.5 flex-wrap">
-              <span class="text-xs text-slate-600 self-center mr-1">Tone:</span>
-              {% for tone in ['professional', 'casual', 'festive', 'urgent', 'inspirational'] %}
-              <button type="button" class="tone-btn {% if loop.first %}active{% endif %}" data-tone="{{ tone }}" onclick="setTone('{{ tone }}', this)">{{ tone.title() }}</button>
-              {% endfor %}
-            </div>
-          </div>
-
-          <div style="display:flex;flex-direction:column;gap:1rem">
-            <div>
-              <label class="label">Title</label>
-              <input type="text" name="title" id="card_title" maxlength="120" placeholder="Main headline..." class="input-field" oninput="updatePreview()">
-            </div>
-            <div>
-              <label class="label">Subtitle</label>
-              <input type="text" name="subtitle" id="card_subtitle" maxlength="160" placeholder="Supporting tagline..." class="input-field" oninput="updatePreview()">
-            </div>
-            <div>
-              <label class="label">Content / Body</label>
-              <textarea name="content" id="card_content" rows="3" maxlength="500"
-                placeholder="Body copy or CTA..."
-                class="input-field" style="resize:none" oninput="updatePreview()"></textarea>
+            <!-- AI Writer -->
+            <div class="ai-writer">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.625rem">
+                <span style="font-size:0.72rem;font-weight:700;color:#a78bfa;display:flex;align-items:center;gap:0.3rem">
+                  ✨ AI Content Writer
+                </span>
+              </div>
+              <div class="flex gap-2 mb-2">
+                <input type="text" id="ai-topic"
+                  placeholder="Topic, product or event name…"
+                  class="input-field flex-1" style="font-size:0.78rem;padding:0.45rem 0.75rem">
+                <button type="button" onclick="runContentWriter()" class="ai-btn" id="content-write-btn">✨ Write</button>
+              </div>
+              <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap">
+                <span style="font-size:0.62rem;color:var(--text-muted)">Tone:</span>
+                {% for tone in ['Professional','Casual','Festive','Urgent','Inspirational'] %}
+                <button type="button" class="tone-pill {% if loop.first %}active{% endif %}"
+                  data-tone="{{ tone.lower() }}" onclick="setTone('{{ tone.lower() }}', this)">{{ tone }}</button>
+                {% endfor %}
+              </div>
             </div>
 
-            <!-- Featured Image with AI tab -->
-            <div>
-              <label class="label">Featured Image</label>
-              <div class="flex gap-1 mb-2 p-1 rounded-lg" style="background:rgba(255,255,255,0.04);width:fit-content">
-                <button type="button" class="tab-btn active" onclick="switchImageTab('upload', this)">📁 Upload</button>
-                <button type="button" class="tab-btn" onclick="switchImageTab('ai', this)">🎨 AI Generate</button>
+            <!-- Fields -->
+            <div class="field-group">
+              <div>
+                <div class="flex items-center justify-between mb-1">
+                  <label class="label" style="margin:0">Title</label>
+                  <span class="char-count" id="title-count">0/120</span>
+                </div>
+                <input type="text" name="title" id="card_title" maxlength="120"
+                  placeholder="Your main headline…" class="input-field"
+                  oninput="updatePreview(); countChars('card_title','title-count',120)">
+              </div>
+              <div>
+                <div class="flex items-center justify-between mb-1">
+                  <label class="label" style="margin:0">Subtitle</label>
+                  <span class="char-count" id="subtitle-count">0/160</span>
+                </div>
+                <input type="text" name="subtitle" id="card_subtitle" maxlength="160"
+                  placeholder="Supporting tagline…" class="input-field"
+                  oninput="updatePreview(); countChars('card_subtitle','subtitle-count',160)">
+              </div>
+              <div>
+                <div class="flex items-center justify-between mb-1">
+                  <label class="label" style="margin:0">Body / CTA</label>
+                  <span class="char-count" id="content-count">0/300</span>
+                </div>
+                <textarea name="content" id="card_content" rows="3" maxlength="300"
+                  placeholder="Description, body copy or call-to-action…"
+                  class="input-field" style="resize:none"
+                  oninput="updatePreview(); countChars('card_content','content-count',300)"></textarea>
               </div>
 
-              <!-- Upload tab -->
-              <div id="image-tab-upload" class="image-tab-content active">
-                <input type="file" name="featured_image" id="featured_image" accept="image/*"
-                  class="input-field" style="padding:0.5rem;cursor:pointer"
-                  onchange="previewLocalImage(this)">
-              </div>
-
-              <!-- AI Generate tab -->
-              <div id="image-tab-ai" class="image-tab-content">
-                <div class="flex gap-2 mb-2">
-                  <input type="text" id="image-prompt" placeholder="Describe the image... e.g. vibrant Diwali celebration" class="input-field flex-1" style="font-size:0.8rem;padding:0.5rem 0.875rem">
-                  <button type="button" onclick="runImageGen()" class="ai-btn" id="image-gen-btn">🎨 Generate</button>
+              <!-- Featured image -->
+              <div>
+                <label class="label" style="margin-bottom:0.5rem">Featured Image</label>
+                <div class="img-tab-bar">
+                  <button type="button" class="img-tab active" onclick="switchImageTab('upload',this)">📁 Upload</button>
+                  <button type="button" class="img-tab" onclick="switchImageTab('ai',this)">🎨 AI Generate</button>
                 </div>
-                <div id="image-gen-status" class="text-xs text-slate-500"></div>
-                <div id="image-preview-wrap" style="display:none;margin-top:0.5rem">
-                  <img id="image-preview-img" src="" class="rounded-lg w-full" style="max-height:140px;object-fit:cover">
-                  <button type="button" onclick="useGeneratedImage()" class="ai-btn mt-2" style="width:100%;justify-content:center">✓ Use This Image</button>
+                <div id="image-tab-upload" class="img-tab-content active">
+                  <input type="file" name="featured_image" id="featured_image" accept="image/*"
+                    class="input-field" style="padding:0.45rem;cursor:pointer"
+                    onchange="previewLocalImage(this)">
                 </div>
-                <input type="hidden" id="generated_image_url" value="">
+                <div id="image-tab-ai" class="img-tab-content">
+                  <div class="flex gap-2 mb-2">
+                    <input type="text" id="image-prompt"
+                      placeholder="Describe the image… e.g. vibrant Diwali celebration"
+                      class="input-field flex-1" style="font-size:0.78rem;padding:0.45rem 0.75rem">
+                    <button type="button" onclick="runImageGen()" class="ai-btn" id="image-gen-btn">🎨 Generate</button>
+                  </div>
+                  <div id="image-gen-status" style="font-size:0.7rem;color:var(--text-muted)"></div>
+                  <div id="image-preview-wrap" style="display:none;margin-top:0.5rem">
+                    <img id="image-preview-img" src="" style="width:100%;border-radius:0.5rem;max-height:130px;object-fit:cover">
+                    <button type="button" onclick="useGeneratedImage()" class="ai-btn mt-2" style="width:100%;justify-content:center">✓ Use This Image</button>
+                  </div>
+                  <input type="hidden" id="generated_image_url" value="">
+                </div>
               </div>
             </div>
           </div>
         </div>
 
         <!-- 6. Live Preview -->
-        <div class="card-glass p-5">
-          <div class="flex items-center justify-between mb-4">
-            <h2 class="text-sm font-semibold text-white flex items-center gap-2" style="font-family:'Poppins',sans-serif">
-              <span class="w-6 h-6 rounded-lg flex items-center justify-center text-indigo-400 text-xs font-bold flex-shrink-0" style="background:rgba(99,102,241,0.2)">6</span>
-              Live Preview
-            </h2>
-            <div class="flex gap-2">
-              <button type="button" onclick="setPreviewSize('square')" class="text-xs px-3 py-1.5 rounded-lg text-slate-300" style="background:rgba(255,255,255,0.05)">Square</button>
-              <button type="button" onclick="setPreviewSize('landscape')" class="text-xs px-3 py-1.5 rounded-lg text-slate-300" style="background:rgba(255,255,255,0.05)">Landscape</button>
-              <button type="button" onclick="setPreviewSize('portrait')" class="text-xs px-3 py-1.5 rounded-lg text-slate-300" style="background:rgba(255,255,255,0.05)">Story</button>
+        <div class="step-card">
+          <div class="step-header" style="cursor:default">
+            <div class="step-num">6</div>
+            <span class="step-title">Live Preview</span>
+            <div class="flex gap-1.5 ml-auto">
+              <button type="button" class="preview-size-btn active" id="psz-square"    onclick="setPreviewSize('square',this)">1:1</button>
+              <button type="button" class="preview-size-btn"        id="psz-landscape" onclick="setPreviewSize('landscape',this)">16:9</button>
+              <button type="button" class="preview-size-btn"        id="psz-portrait"  onclick="setPreviewSize('portrait',this)">9:16</button>
             </div>
           </div>
-          <div class="flex items-center justify-center rounded-xl p-4" style="background:#070710;min-height:320px" id="preview-container">
-            <div id="preview-frame-wrap" style="overflow:hidden;border-radius:12px;box-shadow:0 25px 50px rgba(0,0,0,0.5);transition:all 0.3s">
-              <iframe id="preview-iframe" src="" style="border:none;transform-origin:top left" scrolling="no"></iframe>
+          <div class="step-divider"></div>
+          <div class="step-body" style="padding-top:0.875rem">
+            <div class="preview-wrap" id="preview-wrap">
+              <div id="preview-frame-wrap" style="overflow:hidden;border-radius:10px;box-shadow:0 20px 50px rgba(0,0,0,0.4);transition:all 0.25s">
+                <iframe id="preview-iframe" src="" style="border:none;transform-origin:top left;display:block" scrolling="no"></iframe>
+              </div>
             </div>
+            <p style="font-size:0.65rem;text-align:center;margin-top:0.625rem;color:var(--text-faint)">
+              Live preview — Playwright renders full resolution on export
+            </p>
           </div>
-          <p class="text-xs text-center mt-2" style="color:#334155">Live preview — Playwright renders full resolution on export</p>
         </div>
 
-        <!-- 7. Generate -->
-        <div class="card-glass p-5">
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="text-sm font-semibold text-white" id="size-count-label">0 sizes selected</p>
-              <p class="text-xs text-slate-500 mt-1">Each size → separate PNG in the ZIP</p>
-            </div>
-            <button type="submit" id="generate-btn" class="btn-primary flex items-center gap-2 px-6 py-3 text-sm"
-              onclick="return buildSelectedSizes()">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-              Generate &amp; Download ZIP
-            </button>
-          </div>
-        </div>
+      </div><!-- end right-col -->
+    </div><!-- end editor-grid -->
+
+    <!-- ── Generate bar (sticky bottom) ── -->
+    <div class="generate-bar">
+      <div>
+        <div style="font-size:0.875rem;font-weight:600;color:var(--text-primary)" id="size-count-label">0 sizes selected</div>
+        <div style="font-size:0.7rem;color:var(--text-muted);margin-top:0.15rem">Each size exports as a full-resolution PNG in the ZIP</div>
       </div>
+      <button type="submit" class="generate-btn" onclick="return buildSelectedSizes()">
+        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+        Generate &amp; Download ZIP
+      </button>
     </div>
   </form>
 </div>
@@ -337,250 +534,240 @@
 
 {% block scripts %}
 <script>
-  // ── Size selection ──────────────────────────────────────────────────────────
-  const selectedSizes = new Set();
+// ── Collapsible steps ──────────────────────────────────────────────────────
+function toggleStep(id) {
+  document.getElementById('sc-' + id).classList.toggle('collapsed');
+}
 
-  function toggleSize(key, el) {
-    if (selectedSizes.has(key)) { selectedSizes.delete(key); el.classList.remove('selected'); }
-    else { selectedSizes.add(key); el.classList.add('selected'); }
-    updateSizeCount();
-  }
-  function selectAll() {
-    document.querySelectorAll('[id^="lbl_"]').forEach(el => { selectedSizes.add(el.id.replace('lbl_','')); el.classList.add('selected'); });
-    updateSizeCount();
-  }
-  function clearAll() {
-    selectedSizes.clear();
-    document.querySelectorAll('[id^="lbl_"]').forEach(el => el.classList.remove('selected'));
-    updateSizeCount();
-  }
-  function updateSizeCount() {
-    const n = selectedSizes.size;
-    document.getElementById('size-count-label').textContent = `${n} size${n!==1?'s':''} selected`;
-  }
-  function buildSelectedSizes() {
-    if (!selectedSizes.size) { alert('Select at least one platform size.'); return false; }
-    document.getElementById('selected_sizes_input').value = JSON.stringify([...selectedSizes]);
-    return true;
-  }
+// ── Size selection ─────────────────────────────────────────────────────────
+const selectedSizes = new Set();
 
-  // ── Template selection ──────────────────────────────────────────────────────
-  function selectTemplate(key, wrapper) {
-    document.querySelectorAll('.template-card').forEach(c => c.classList.remove('selected'));
-    wrapper.querySelector('.template-card').classList.add('selected');
-    document.getElementById('tpl_' + key).checked = true;
-    updatePreview();
-  }
-
-  // ── Preview ─────────────────────────────────────────────────────────────────
-  const previewSizes = {
-    square:    { w: 1080, h: 1080, display: 280 },
-    landscape: { w: 1200, h: 630,  display: 340 },
-    portrait:  { w: 1080, h: 1920, display: 175 },
-  };
-  let currentMode = 'square';
-  let localImageDataUrl = '';
-  let generatedImageUrl = '';
-
-  function setPreviewSize(mode) { currentMode = mode; applyScale(); }
-
-  function applyScale() {
-    const { w, h, display } = previewSizes[currentMode];
-    const scale = display / w;
-    const wrap = document.getElementById('preview-frame-wrap');
-    const iframe = document.getElementById('preview-iframe');
-    wrap.style.width  = display + 'px';
-    wrap.style.height = Math.round(h * scale) + 'px';
-    iframe.style.width  = w + 'px';
-    iframe.style.height = h + 'px';
-    iframe.style.transform = `scale(${scale})`;
-  }
-
-  function previewLocalImage(input) {
-    if (input.files && input.files[0]) {
-      const reader = new FileReader();
-      reader.onload = e => { localImageDataUrl = e.target.result; generatedImageUrl = ''; updatePreview(); };
-      reader.readAsDataURL(input.files[0]);
-    }
-  }
-
-  function updatePreview() {
-    const tpl      = document.querySelector('input[name="card_template"]:checked')?.value || 'announcement';
-    const title    = encodeURIComponent(document.getElementById('card_title')?.value || '');
-    const subtitle = encodeURIComponent(document.getElementById('card_subtitle')?.value || '');
-    const content  = encodeURIComponent(document.getElementById('card_content')?.value || '');
-    const language = document.getElementById('language_select')?.value || 'english';
-    const kit_id   = document.getElementById('brand_kit_id')?.value || '';
-    const img      = encodeURIComponent(generatedImageUrl || localImageDataUrl || '');
-    const { w, h } = previewSizes[currentMode];
-    document.getElementById('preview-iframe').src =
-      `/cards/preview?tpl=${tpl}&title=${title}&subtitle=${subtitle}&content=${content}&lang=${language}&kit_id=${kit_id}&w=${w}&h=${h}&img=${img}`;
-    applyScale();
-  }
-
-  // ── Image tab ───────────────────────────────────────────────────────────────
-  function switchImageTab(tab, btn) {
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.image-tab-content').forEach(c => { c.classList.remove('active'); c.style.display = 'none'; });
-    btn.classList.add('active');
-    const el = document.getElementById('image-tab-' + tab);
-    el.classList.add('active');
-    el.style.display = 'block';
-  }
-
-  // ── AI Image Generation ─────────────────────────────────────────────────────
-  async function runImageGen() {
-    const prompt = document.getElementById('image-prompt').value.trim();
-    if (!prompt) { alert('Enter an image description first.'); return; }
-
-    const btn = document.getElementById('image-gen-btn');
-    const status = document.getElementById('image-gen-status');
-    const tpl = document.querySelector('input[name="card_template"]:checked')?.value || 'announcement';
-    const brandName = document.getElementById('brand_kit_id')?.selectedOptions[0]?.dataset.name || '';
-
-    btn.classList.add('loading'); btn.disabled = true;
-    status.textContent = 'Enhancing prompt with AI...';
-
-    try {
-      const resp = await fetch('/ai/generate-image', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt, template: tpl, brand_name: brandName, width: 1080, height: 1080 }),
-      });
-      const data = await resp.json();
-
-      if (data.url) {
-        generatedImageUrl = data.url;
-        localImageDataUrl = '';
-        document.getElementById('image-preview-img').src = data.url;
-        document.getElementById('image-preview-wrap').style.display = 'block';
-        status.textContent = `✓ Generated via ${data.provider}`;
-        updatePreview();
-      } else {
-        status.innerHTML = `<span style="color:#f87171">No image provider configured.</span> Add STABILITY_API_KEY or REPLICATE_API_TOKEN in .env.<br><span style="color:#64748b">Enhanced prompt: ${data.enhanced_prompt}</span>`;
-      }
-    } catch (e) {
-      status.textContent = 'Error generating image.';
-    } finally {
-      btn.classList.remove('loading'); btn.disabled = false;
-    }
-  }
-
-  function useGeneratedImage() {
-    updatePreview();
-    document.getElementById('image-gen-status').textContent = '✓ Image applied to preview';
-  }
-
-  // ── AI Content Writer ───────────────────────────────────────────────────────
-  let activeTone = 'professional';
-
-  function setTone(tone, btn) {
-    activeTone = tone;
-    document.querySelectorAll('.tone-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-  }
-
-  async function runContentWriter() {
-    const topic = document.getElementById('ai-topic').value.trim();
-    if (!topic) { alert('Enter a topic or product name first.'); return; }
-
-    const btn = document.getElementById('content-write-btn');
-    btn.classList.add('loading'); btn.disabled = true;
-
-    const tpl = document.querySelector('input[name="card_template"]:checked')?.value || 'announcement';
-    const lang = document.getElementById('language_select')?.value || 'english';
-    const brandName = document.getElementById('brand_kit_id')?.selectedOptions[0]?.dataset.name || '';
-
-    try {
-      const resp = await fetch('/ai/generate-content', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ topic, brand_name: brandName, template: tpl, language: lang, tone: activeTone }),
-      });
-      const data = await resp.json();
-
-      document.getElementById('card_title').value    = data.title || '';
-      document.getElementById('card_subtitle').value = data.subtitle || '';
-      document.getElementById('card_content').value  = data.content || '';
-      updatePreview();
-
-      showProviderBadge(data.provider);
-    } catch (e) {
-      alert('AI content generation failed.');
-    } finally {
-      btn.classList.remove('loading'); btn.disabled = false;
-    }
-  }
-
-  // ── AI Recommender ──────────────────────────────────────────────────────────
-  let recommendationData = null;
-
-  async function runRecommender() {
-    const desc = document.getElementById('recommend-input').value.trim();
-    if (!desc) { alert('Describe your card goal first.'); return; }
-
-    const btn = document.getElementById('recommend-btn');
-    btn.classList.add('loading'); btn.disabled = true;
-
-    const brandName = document.getElementById('brand_kit_id')?.selectedOptions[0]?.dataset.name || '';
-
-    try {
-      const resp = await fetch('/ai/recommend-template', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ description: desc, brand_name: brandName }),
-      });
-      recommendationData = await resp.json();
-
-      document.getElementById('recommend-reason').textContent = recommendationData.reason;
-      document.getElementById('rec-template').textContent = recommendationData.template.replace('_', ' ');
-      document.getElementById('rec-primary').style.background = recommendationData.primary_color;
-      document.getElementById('rec-accent').style.background  = recommendationData.accent_color;
-      document.getElementById('recommend-result').style.display = 'block';
-
-      if (recommendationData.suggested_topic) {
-        document.getElementById('ai-topic').value = recommendationData.suggested_topic;
-      }
-      showProviderBadge(recommendationData.provider);
-    } catch (e) {
-      alert('Recommendation failed.');
-    } finally {
-      btn.classList.remove('loading'); btn.disabled = false;
-    }
-  }
-
-  function applyRecommendation() {
-    if (!recommendationData) return;
-    const tplKey = recommendationData.template;
-    const wrapper = document.getElementById('tpl_' + tplKey)?.closest('div[onclick]');
-    if (wrapper) selectTemplate(tplKey, wrapper);
-    document.getElementById('recommend-result').style.display = 'none';
-  }
-
-  // ── Provider badge ──────────────────────────────────────────────────────────
-  function showProviderBadge(provider) {
-    const el = document.getElementById('provider-indicator');
-    const labels = { claude: '⚡ Claude', openai: '🟢 OpenAI', ollama: '🔵 Ollama', fallback: '📋 Template fallback' };
-    el.textContent = `AI: ${labels[provider] || provider}`;
-  }
-
-  // ── Provider status on load ─────────────────────────────────────────────────
-  async function loadProviderStatus() {
-    try {
-      const r = await fetch('/ai/provider-status');
-      const d = await r.json();
-      showProviderBadge(d.active_provider);
-    } catch {}
-  }
-
-  // ── Init ────────────────────────────────────────────────────────────────────
-  document.addEventListener('DOMContentLoaded', () => {
-    // init image tab display
-    document.getElementById('image-tab-upload').style.display = 'block';
-    document.getElementById('image-tab-ai').style.display = 'none';
-    applyScale();
-    updatePreview();
-    loadProviderStatus();
+function toggleSize(key, el) {
+  if (selectedSizes.has(key)) { selectedSizes.delete(key); el.classList.remove('selected'); }
+  else { selectedSizes.add(key); el.classList.add('selected'); }
+  updateSizeBadge();
+}
+function selectAll() {
+  document.querySelectorAll('[id^="lbl_"]').forEach(el => {
+    selectedSizes.add(el.id.replace('lbl_','')); el.classList.add('selected');
   });
+  updateSizeBadge();
+}
+function clearAll() {
+  selectedSizes.clear();
+  document.querySelectorAll('[id^="lbl_"]').forEach(el => el.classList.remove('selected'));
+  updateSizeBadge();
+}
+function updateSizeBadge() {
+  const n = selectedSizes.size;
+  const badge = document.getElementById('badge-sizes');
+  badge.textContent = `${n} selected`;
+  badge.classList.toggle('show', n > 0);
+  document.getElementById('size-count-label').textContent = `${n} size${n!==1?'s':''} selected`;
+}
+function buildSelectedSizes() {
+  if (!selectedSizes.size) { alert('Select at least one platform size.'); return false; }
+  document.getElementById('selected_sizes_input').value = JSON.stringify([...selectedSizes]);
+  return true;
+}
+
+// ── Template selection ─────────────────────────────────────────────────────
+function selectTemplate(key, label) {
+  document.querySelectorAll('.tpl-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('tpl-card-' + key).classList.add('selected');
+  document.getElementById('tpl_' + key).checked = true;
+  document.getElementById('badge-template').textContent = label;
+  updatePreview();
+}
+
+// ── Brand kit change ───────────────────────────────────────────────────────
+function onKitChange() {
+  const sel = document.getElementById('brand_kit_id');
+  const opt = sel.selectedOptions[0];
+  document.getElementById('badge-brand').textContent = opt?.dataset.name || 'None';
+  updatePreview();
+}
+
+// ── Language change ────────────────────────────────────────────────────────
+function onLangChange() {
+  const sel = document.getElementById('language_select');
+  document.getElementById('badge-lang').textContent = sel.selectedOptions[0]?.text || 'English';
+  updatePreview();
+}
+
+// ── Char counter ───────────────────────────────────────────────────────────
+function countChars(inputId, counterId, max) {
+  const len = document.getElementById(inputId).value.length;
+  const el = document.getElementById(counterId);
+  el.textContent = `${len}/${max}`;
+  el.style.color = len > max * 0.9 ? '#f87171' : 'var(--text-muted)';
+}
+
+// ── Preview ────────────────────────────────────────────────────────────────
+const previewSizes = {
+  square:    { w: 1080, h: 1080, display: 300 },
+  landscape: { w: 1200, h: 630,  display: 400 },
+  portrait:  { w: 1080, h: 1920, display: 195 },
+};
+let currentMode = 'square';
+let localImageDataUrl = '';
+let generatedImageUrl = '';
+
+function setPreviewSize(mode, btn) {
+  currentMode = mode;
+  document.querySelectorAll('.preview-size-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  applyScale();
+}
+function applyScale() {
+  const { w, h, display } = previewSizes[currentMode];
+  const scale = display / w;
+  const wrap = document.getElementById('preview-frame-wrap');
+  const iframe = document.getElementById('preview-iframe');
+  wrap.style.width  = display + 'px';
+  wrap.style.height = Math.round(h * scale) + 'px';
+  iframe.style.width  = w + 'px';
+  iframe.style.height = h + 'px';
+  iframe.style.transform = `scale(${scale})`;
+}
+function updatePreview() {
+  const tpl      = document.querySelector('input[name="card_template"]:checked')?.value || 'announcement';
+  const title    = encodeURIComponent(document.getElementById('card_title')?.value || '');
+  const subtitle = encodeURIComponent(document.getElementById('card_subtitle')?.value || '');
+  const content  = encodeURIComponent(document.getElementById('card_content')?.value || '');
+  const language = document.getElementById('language_select')?.value || 'english';
+  const kit_id   = document.getElementById('brand_kit_id')?.value || '';
+  const img      = encodeURIComponent(generatedImageUrl || localImageDataUrl || '');
+  const { w, h } = previewSizes[currentMode];
+  document.getElementById('preview-iframe').src =
+    `/cards/preview?tpl=${tpl}&title=${title}&subtitle=${subtitle}&content=${content}&lang=${language}&kit_id=${kit_id}&w=${w}&h=${h}&img=${img}`;
+  applyScale();
+}
+
+// ── Image tabs ─────────────────────────────────────────────────────────────
+function switchImageTab(tab, btn) {
+  document.querySelectorAll('.img-tab').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.img-tab-content').forEach(c => c.style.display = 'none');
+  btn.classList.add('active');
+  document.getElementById('image-tab-' + tab).style.display = 'block';
+}
+function previewLocalImage(input) {
+  if (input.files && input.files[0]) {
+    const reader = new FileReader();
+    reader.onload = e => { localImageDataUrl = e.target.result; generatedImageUrl = ''; updatePreview(); };
+    reader.readAsDataURL(input.files[0]);
+  }
+}
+
+// ── AI Image Gen ───────────────────────────────────────────────────────────
+async function runImageGen() {
+  const prompt = document.getElementById('image-prompt').value.trim();
+  if (!prompt) { alert('Enter an image description first.'); return; }
+  const btn = document.getElementById('image-gen-btn');
+  const status = document.getElementById('image-gen-status');
+  const tpl = document.querySelector('input[name="card_template"]:checked')?.value || 'announcement';
+  const brandName = document.getElementById('brand_kit_id')?.selectedOptions[0]?.dataset.name || '';
+  btn.classList.add('loading'); btn.disabled = true;
+  status.textContent = 'Enhancing prompt with AI…';
+  try {
+    const data = await fetch('/ai/generate-image', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ prompt, template: tpl, brand_name: brandName, width:1080, height:1080 }),
+    }).then(r=>r.json());
+    if (data.url) {
+      generatedImageUrl = data.url; localImageDataUrl = '';
+      document.getElementById('image-preview-img').src = data.url;
+      document.getElementById('image-preview-wrap').style.display = 'block';
+      status.textContent = `✓ Generated via ${data.provider}`;
+      updatePreview();
+    } else {
+      status.innerHTML = `<span style="color:#f87171">No image provider configured.</span> Add STABILITY_API_KEY or REPLICATE_API_TOKEN to .env`;
+    }
+  } catch { status.textContent = 'Error generating image.'; }
+  finally { btn.classList.remove('loading'); btn.disabled = false; }
+}
+function useGeneratedImage() {
+  updatePreview();
+  document.getElementById('image-gen-status').textContent = '✓ Image applied';
+}
+
+// ── AI Content Writer ──────────────────────────────────────────────────────
+let activeTone = 'professional';
+function setTone(tone, btn) {
+  activeTone = tone;
+  document.querySelectorAll('.tone-pill').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+async function runContentWriter() {
+  const topic = document.getElementById('ai-topic').value.trim();
+  if (!topic) { alert('Enter a topic first.'); return; }
+  const btn = document.getElementById('content-write-btn');
+  btn.classList.add('loading'); btn.disabled = true;
+  const tpl  = document.querySelector('input[name="card_template"]:checked')?.value || 'announcement';
+  const lang = document.getElementById('language_select')?.value || 'english';
+  const brandName = document.getElementById('brand_kit_id')?.selectedOptions[0]?.dataset.name || '';
+  try {
+    const data = await fetch('/ai/generate-content', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ topic, brand_name: brandName, template: tpl, language: lang, tone: activeTone }),
+    }).then(r=>r.json());
+    document.getElementById('card_title').value    = data.title || '';
+    document.getElementById('card_subtitle').value = data.subtitle || '';
+    document.getElementById('card_content').value  = data.content || '';
+    countChars('card_title','title-count',120);
+    countChars('card_subtitle','subtitle-count',160);
+    countChars('card_content','content-count',300);
+    updatePreview();
+    showProvider(data.provider);
+  } catch { alert('AI content generation failed.'); }
+  finally { btn.classList.remove('loading'); btn.disabled = false; }
+}
+
+// ── AI Recommender ─────────────────────────────────────────────────────────
+let recommendationData = null;
+async function runRecommender() {
+  const desc = document.getElementById('recommend-input').value.trim();
+  if (!desc) { alert('Describe your card goal first.'); return; }
+  const btn = document.getElementById('recommend-btn');
+  btn.classList.add('loading'); btn.disabled = true;
+  const brandName = document.getElementById('brand_kit_id')?.selectedOptions[0]?.dataset.name || '';
+  try {
+    recommendationData = await fetch('/ai/recommend-template', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ description: desc, brand_name: brandName }),
+    }).then(r=>r.json());
+    document.getElementById('recommend-reason').textContent = recommendationData.reason;
+    document.getElementById('rec-template').textContent = recommendationData.template.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
+    document.getElementById('rec-primary').style.background = recommendationData.primary_color;
+    document.getElementById('rec-accent').style.background  = recommendationData.accent_color;
+    document.getElementById('recommend-result').style.display = 'block';
+    if (recommendationData.suggested_topic) document.getElementById('ai-topic').value = recommendationData.suggested_topic;
+    showProvider(recommendationData.provider);
+  } catch { alert('Recommendation failed.'); }
+  finally { btn.classList.remove('loading'); btn.disabled = false; }
+}
+function applyRecommendation() {
+  if (!recommendationData) return;
+  selectTemplate(recommendationData.template, recommendationData.template.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase()));
+  document.getElementById('recommend-result').style.display = 'none';
+}
+
+// ── Provider indicator ─────────────────────────────────────────────────────
+function showProvider(p) {
+  const labels = { claude:'⚡ Claude', openai:'🟢 OpenAI', ollama:'🔵 Ollama', fallback:'📋 Fallback' };
+  document.getElementById('provider-indicator').textContent = `AI: ${labels[p]||p}`;
+}
+async function loadProvider() {
+  try { const d = await fetch('/ai/provider-status').then(r=>r.json()); showProvider(d.active_provider); } catch {}
+}
+
+// ── Init ───────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('image-tab-upload').style.display = 'block';
+  document.getElementById('image-tab-ai').style.display = 'none';
+  applyScale();
+  updatePreview();
+  loadProvider();
+});
 </script>
 {% endblock %}
