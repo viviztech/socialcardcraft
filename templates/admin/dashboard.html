@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}Admin — SocialCardCraft{% endblock %}
+{% block content %}
+<div class="p-8">
+  <div class="mb-8">
+    <h1 class="font-heading text-2xl font-bold text-white">Admin Panel</h1>
+    <p class="text-slate-400 text-sm mt-1">Platform overview</p>
+  </div>
+
+  <!-- Stats -->
+  <div class="grid grid-cols-4 gap-5 mb-8">
+    <div class="card-glass p-5">
+      <p class="text-slate-400 text-xs font-semibold uppercase tracking-wide mb-2">Total Users</p>
+      <p class="text-3xl font-heading font-bold text-white">{{ total_users }}</p>
+    </div>
+    <div class="card-glass p-5">
+      <p class="text-slate-400 text-xs font-semibold uppercase tracking-wide mb-2">Pro Users</p>
+      <p class="text-3xl font-heading font-bold text-amber-400">{{ pro_users }}</p>
+    </div>
+    <div class="card-glass p-5">
+      <p class="text-slate-400 text-xs font-semibold uppercase tracking-wide mb-2">Total Exports</p>
+      <p class="text-3xl font-heading font-bold text-white">{{ total_exports }}</p>
+    </div>
+    <div class="card-glass p-5">
+      <p class="text-slate-400 text-xs font-semibold uppercase tracking-wide mb-2">Today's Exports</p>
+      <p class="text-3xl font-heading font-bold text-indigo-400">{{ exports_today }}</p>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-2 gap-6">
+    <!-- Recent Jobs -->
+    <div class="card-glass overflow-hidden">
+      <div class="px-6 py-4 border-b border-white/5 flex justify-between items-center">
+        <h2 class="font-heading font-semibold text-white text-sm">Recent Jobs</h2>
+        <a href="/admin/jobs" class="text-xs text-indigo-400 hover:underline">View all</a>
+      </div>
+      <div class="divide-y divide-white/5">
+        {% for job in recent_jobs[:8] %}
+        <div class="px-6 py-3 flex items-center justify-between">
+          <div>
+            <p class="text-sm text-white">{{ job.title or job.card_template.replace('_', ' ').title() }}</p>
+            <p class="text-xs text-slate-500">{{ job.card_template }} · {{ job.total_cards }} sizes · {{ job.language }}</p>
+          </div>
+          <span class="text-xs px-2 py-1 rounded-full
+            {% if job.status == 'done' %}bg-green-500/10 text-green-400
+            {% elif job.status == 'failed' %}bg-red-500/10 text-red-400
+            {% else %}bg-yellow-500/10 text-yellow-400{% endif %}">
+            {{ job.status }}
+          </span>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Recent Users -->
+    <div class="card-glass overflow-hidden">
+      <div class="px-6 py-4 border-b border-white/5 flex justify-between items-center">
+        <h2 class="font-heading font-semibold text-white text-sm">Recent Users</h2>
+        <a href="/admin/users" class="text-xs text-indigo-400 hover:underline">View all</a>
+      </div>
+      <div class="divide-y divide-white/5">
+        {% for u in recent_users %}
+        <div class="px-6 py-3 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-7 h-7 bg-indigo-500/20 rounded-full flex items-center justify-center text-indigo-300 text-xs font-bold">
+              {{ u.name[0].upper() }}
+            </div>
+            <div>
+              <p class="text-sm text-white">{{ u.name }}</p>
+              <p class="text-xs text-slate-500">{{ u.email }}</p>
+            </div>
+          </div>
+          <span class="text-xs px-2 py-1 rounded-full
+            {% if u.plan == 'pro' %}bg-amber-500/10 text-amber-400
+            {% else %}bg-white/5 text-slate-400{% endif %}">
+            {{ u.plan }}
+          </span>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

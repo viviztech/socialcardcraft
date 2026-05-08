@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en" dir="{{ font.direction }}">
+<head>
+<meta charset="UTF-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="{{ fonts_url }}" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root { --primary: {{ brand.primary_color }}; --accent: {{ brand.accent_color }}; --w: {{ size.width }}px; --h: {{ size.height }}px; }
+  html, body { width: var(--w); height: var(--h); overflow: hidden; }
+
+  .card {
+    width: var(--w); height: var(--h);
+    position: relative; overflow: hidden;
+    font-family: {{ font.css_family }};
+    direction: {{ font.direction }};
+    background: #ffffff;
+    display: flex; flex-direction: column;
+  }
+
+  /* Split layout: left = product image, right = content */
+  .split-layout {
+    display: flex;
+    height: 100%;
+  }
+
+  .image-side {
+    width: 48%;
+    flex-shrink: 0;
+    position: relative;
+    overflow: hidden;
+    background: {{ brand.primary_color }}18;
+  }
+
+  .image-side::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent 70%, #ffffff 100%);
+  }
+
+  {% if card.featured_image_url %}
+  .image-side-bg {
+    width: 100%; height: 100%;
+    background: url('{{ card.featured_image_url }}') center / cover no-repeat;
+  }
+  {% else %}
+  .image-side-bg {
+    width: 100%; height: 100%;
+    display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(135deg, {{ brand.primary_color }}22, {{ brand.accent_color }}22);
+  }
+  .placeholder-icon { font-size: calc(var(--w) * 0.12); }
+  {% endif %}
+
+  .content-side {
+    flex: 1;
+    display: flex; flex-direction: column;
+    padding: calc(var(--w) * 0.05) calc(var(--w) * 0.06) calc(var(--w) * 0.05) calc(var(--w) * 0.03);
+    position: relative;
+  }
+
+  /* Decorative corner shape */
+  .corner-accent {
+    position: absolute;
+    top: 0; right: 0;
+    width: calc(var(--w) * 0.18); height: calc(var(--w) * 0.18);
+    background: {{ brand.accent_color }};
+    clip-path: polygon(100% 0, 0 0, 100% 100%);
+    opacity: 0.9;
+  }
+
+  .logo-wrap { margin-bottom: auto; }
+  .logo-wrap img { height: calc(var(--h) * 0.07); max-width: calc(var(--w) * 0.28); object-fit: contain; }
+  .logo-wrap .brand-name { font-family: 'Poppins', {{ font.css_family }}; font-size: calc(var(--w) * 0.03); font-weight: 700; color: {{ brand.primary_color }}; }
+
+  .badge {
+    display: inline-flex; align-items: center; gap: calc(var(--w) * 0.008);
+    background: {{ brand.primary_color }};
+    color: #fff;
+    font-family: 'Poppins', sans-serif;
+    font-size: calc(var(--w) * 0.019);
+    font-weight: 700;
+    padding: calc(var(--w) * 0.01) calc(var(--w) * 0.025);
+    border-radius: calc(var(--w) * 0.015);
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    margin-bottom: calc(var(--h) * 0.02);
+    width: fit-content;
+  }
+
+  .title {
+    font-family: {{ font.css_family }};
+    font-size: calc(var(--w) * 0.062);
+    font-weight: 700;
+    line-height: 1.2;
+    color: #111;
+    margin-bottom: calc(var(--h) * 0.015);
+  }
+
+  .subtitle {
+    font-family: {{ font.body_family }};
+    font-size: calc(var(--w) * 0.033);
+    color: #555;
+    line-height: 1.5;
+    margin-bottom: calc(var(--h) * 0.02);
+  }
+
+  .body-text {
+    font-family: {{ font.body_family }};
+    font-size: calc(var(--w) * 0.025);
+    color: #777;
+    line-height: 1.6;
+    margin-bottom: auto;
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .divider {
+    width: calc(var(--w) * 0.08);
+    height: 3px;
+    background: {{ brand.accent_color }};
+    border-radius: 2px;
+    margin: calc(var(--h) * 0.02) 0;
+  }
+
+  .bottom-info {
+    border-top: 1px solid #eee;
+    padding-top: calc(var(--h) * 0.018);
+  }
+
+  .handles-row {
+    display: flex; flex-wrap: wrap; gap: calc(var(--w) * 0.015);
+    margin-bottom: calc(var(--h) * 0.012);
+  }
+
+  .handle {
+    font-family: 'Poppins', sans-serif;
+    font-size: calc(var(--w) * 0.02);
+    color: #666;
+    display: flex; align-items: center; gap: calc(var(--w) * 0.006);
+  }
+
+  .handle-dot { width: 5px; height: 5px; border-radius: 50%; background: {{ brand.accent_color }}; display: inline-block; }
+
+  .contact-row {
+    font-family: 'Poppins', sans-serif;
+    font-size: calc(var(--w) * 0.019);
+    color: #888;
+    display: flex; gap: calc(var(--w) * 0.02);
+    flex-wrap: wrap;
+  }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="split-layout">
+    <div class="image-side">
+      <div class="image-side-bg">
+        {% if not card.featured_image_url %}<div class="placeholder-icon">🚀</div>{% endif %}
+      </div>
+    </div>
+
+    <div class="content-side">
+      <div class="corner-accent"></div>
+
+      <div class="logo-wrap">
+        {% if brand.logo_url %}
+          <img src="{{ brand.logo_url }}" alt="{{ brand.name }}">
+        {% else %}
+          <span class="brand-name">{{ brand.name }}</span>
+        {% endif %}
+      </div>
+
+      <div class="badge">🚀 New Launch</div>
+
+      {% if card.title %}<div class="title">{{ card.title }}</div>{% endif %}
+      <div class="divider"></div>
+      {% if card.subtitle %}<div class="subtitle">{{ card.subtitle }}</div>{% endif %}
+      {% if card.content %}<div class="body-text">{{ card.content }}</div>{% endif %}
+
+      <div class="bottom-info">
+        <div class="handles-row">
+          {% if brand.instagram %}<span class="handle"><span class="handle-dot"></span>@{{ brand.instagram }}</span>{% endif %}
+          {% if brand.facebook %}<span class="handle"><span class="handle-dot"></span>{{ brand.facebook }}</span>{% endif %}
+          {% if brand.twitter %}<span class="handle"><span class="handle-dot"></span>@{{ brand.twitter }}</span>{% endif %}
+          {% if brand.linkedin %}<span class="handle"><span class="handle-dot"></span>{{ brand.linkedin }}</span>{% endif %}
+        </div>
+        <div class="contact-row">
+          {% if brand.phone %}<span>📞 {{ brand.phone }}</span>{% endif %}
+          {% if brand.website %}<span>🌐 {{ brand.website }}</span>{% endif %}
+          {% if brand.email %}<span>✉️ {{ brand.email }}</span>{% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

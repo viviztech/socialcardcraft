@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en" dir="{{ font.direction }}">
+<head>
+<meta charset="UTF-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="{{ fonts_url }}" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root { --primary: {{ brand.primary_color }}; --accent: {{ brand.accent_color }}; --w: {{ size.width }}px; --h: {{ size.height }}px; }
+  html, body { width: var(--w); height: var(--h); overflow: hidden; }
+
+  .card {
+    width: var(--w); height: var(--h);
+    position: relative; overflow: hidden;
+    font-family: {{ font.css_family }};
+    direction: {{ font.direction }};
+    background: #0a0a1a;
+    display: flex; flex-direction: column;
+  }
+
+  .bg {
+    position: absolute; inset: 0;
+    {% if card.featured_image_url %}
+    background: url('{{ card.featured_image_url }}') center / cover no-repeat;
+    {% else %}
+    background: radial-gradient(ellipse at top, {{ brand.primary_color }}55 0%, #0a0a1a 70%);
+    {% endif %}
+  }
+
+  .bg-overlay {
+    position: absolute; inset: 0;
+    background: linear-gradient(180deg, rgba(10,10,26,0.3) 0%, rgba(10,10,26,0.75) 55%, rgba(10,10,26,0.97) 100%);
+  }
+
+  /* Glowing circle decorations */
+  .glow-circle {
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+  }
+  .glow-1 {
+    width: calc(var(--w) * 0.5); height: calc(var(--w) * 0.5);
+    background: {{ brand.primary_color }};
+    opacity: 0.1;
+    top: calc(var(--h) * -0.1);
+    right: calc(var(--w) * -0.1);
+    filter: blur(calc(var(--w) * 0.06));
+  }
+  .glow-2 {
+    width: calc(var(--w) * 0.3); height: calc(var(--w) * 0.3);
+    background: {{ brand.accent_color }};
+    opacity: 0.12;
+    bottom: calc(var(--h) * 0.1);
+    left: calc(var(--w) * -0.05);
+    filter: blur(calc(var(--w) * 0.05));
+  }
+
+  .content-wrap {
+    position: relative; z-index: 5;
+    display: flex; flex-direction: column;
+    height: 100%;
+    padding: calc(var(--w) * 0.06);
+  }
+
+  .top-row {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    margin-bottom: auto;
+  }
+
+  .logo-box img { height: calc(var(--h) * 0.065); max-width: calc(var(--w) * 0.3); object-fit: contain; }
+  .logo-box .brand-name { font-family: 'Poppins', {{ font.css_family }}; font-size: calc(var(--w) * 0.03); font-weight: 700; color: #fff; }
+
+  .event-badge {
+    background: {{ brand.accent_color }};
+    color: #fff;
+    font-family: 'Poppins', sans-serif;
+    font-size: calc(var(--w) * 0.022);
+    font-weight: 700;
+    padding: calc(var(--w) * 0.012) calc(var(--w) * 0.028);
+    border-radius: calc(var(--w) * 0.05);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .main-block { margin-top: auto; }
+
+  .eyebrow {
+    font-family: 'Poppins', sans-serif;
+    font-size: calc(var(--w) * 0.022);
+    font-weight: 600;
+    color: {{ brand.accent_color }};
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: calc(var(--h) * 0.015);
+    display: flex; align-items: center; gap: calc(var(--w) * 0.015);
+  }
+  .eyebrow::before { content: ''; display: block; width: calc(var(--w) * 0.04); height: 2px; background: {{ brand.accent_color }}; }
+
+  .title {
+    font-family: {{ font.css_family }};
+    font-size: calc(var(--w) * 0.08);
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.15;
+    margin-bottom: calc(var(--h) * 0.018);
+    text-shadow: 0 2px 16px rgba(0,0,0,0.6);
+  }
+
+  .subtitle {
+    font-family: {{ font.body_family }};
+    font-size: calc(var(--w) * 0.038);
+    color: rgba(255,255,255,0.8);
+    margin-bottom: calc(var(--h) * 0.02);
+    line-height: 1.5;
+  }
+
+  .body-text {
+    font-family: {{ font.body_family }};
+    font-size: calc(var(--w) * 0.026);
+    color: rgba(255,255,255,0.65);
+    line-height: 1.6;
+    margin-bottom: calc(var(--h) * 0.03);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .bottom-strip {
+    display: flex; align-items: center; justify-content: space-between;
+    border-top: 1px solid rgba(255,255,255,0.12);
+    padding-top: calc(var(--h) * 0.02);
+    flex-wrap: wrap; gap: calc(var(--w) * 0.015);
+  }
+
+  .handles {
+    display: flex; gap: calc(var(--w) * 0.02);
+    font-family: 'Poppins', sans-serif;
+    font-size: calc(var(--w) * 0.021);
+    color: rgba(255,255,255,0.7);
+    flex-wrap: wrap;
+  }
+
+  .contact {
+    font-family: 'Poppins', sans-serif;
+    font-size: calc(var(--w) * 0.021);
+    color: rgba(255,255,255,0.65);
+    display: flex; gap: calc(var(--w) * 0.018); flex-wrap: wrap;
+  }
+
+  .qr-box { background: #fff; border-radius: calc(var(--w) * 0.01); padding: calc(var(--w) * 0.007); }
+  .qr-box img { width: calc(var(--w) * 0.09); height: calc(var(--w) * 0.09); display: block; }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="bg"></div>
+  <div class="bg-overlay"></div>
+  <div class="glow-circle glow-1"></div>
+  <div class="glow-circle glow-2"></div>
+
+  <div class="content-wrap">
+    <div class="top-row">
+      <div class="logo-box">
+        {% if brand.logo_url %}<img src="{{ brand.logo_url }}" alt="{{ brand.name }}">
+        {% else %}<span class="brand-name">{{ brand.name }}</span>{% endif %}
+      </div>
+      <div class="event-badge">🎉 Event</div>
+    </div>
+
+    <div class="main-block">
+      <div class="eyebrow">You're Invited</div>
+      {% if card.title %}<div class="title">{{ card.title }}</div>{% endif %}
+      {% if card.subtitle %}<div class="subtitle">{{ card.subtitle }}</div>{% endif %}
+      {% if card.content %}<div class="body-text">{{ card.content }}</div>{% endif %}
+
+      <div class="bottom-strip">
+        <div class="handles">
+          {% if brand.instagram %}<span>📸 @{{ brand.instagram }}</span>{% endif %}
+          {% if brand.facebook %}<span>📘 {{ brand.facebook }}</span>{% endif %}
+          {% if brand.twitter %}<span>𝕏 @{{ brand.twitter }}</span>{% endif %}
+          {% if brand.youtube %}<span>▶️ {{ brand.youtube }}</span>{% endif %}
+        </div>
+        <div class="contact">
+          {% if brand.phone %}<span>📞 {{ brand.phone }}</span>{% endif %}
+          {% if brand.website %}<span>🌐 {{ brand.website }}</span>{% endif %}
+        </div>
+        {% if qr_code and brand.website %}
+        <div class="qr-box"><img src="{{ qr_code }}" alt="QR"></div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

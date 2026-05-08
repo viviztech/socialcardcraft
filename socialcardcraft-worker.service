@@ -1,0 +1,15 @@
+[Unit]
+Description=SocialCardCraft Celery Worker
+After=network.target redis.service
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/home/ubuntu/projects/socialcardcraft
+EnvironmentFile=/home/ubuntu/projects/socialcardcraft/.env
+ExecStart=/home/ubuntu/projects/socialcardcraft/venv/bin/celery -A worker.celery_app worker --loglevel=info --concurrency=2
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

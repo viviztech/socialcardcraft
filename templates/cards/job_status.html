@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}Job Status — SocialCardCraft{% endblock %}
+{% block content %}
+<div class="p-8 flex items-center justify-center min-h-screen">
+  <div class="max-w-lg w-full text-center">
+
+    <div id="status-display">
+      {% if job.status == 'done' %}
+      <div class="text-6xl mb-4">✅</div>
+      <h1 class="font-heading text-2xl font-bold text-white mb-2">Cards Ready!</h1>
+      <p class="text-slate-400 mb-6">{{ job.total_cards }} card{{ 's' if job.total_cards != 1 else '' }} generated successfully in {{ job.language.title() }}</p>
+      <a href="{{ job.zip_url }}" target="_blank"
+        class="btn-primary inline-flex items-center gap-2 px-8 py-3 text-base">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+        Download ZIP
+      </a>
+
+      {% elif job.status == 'failed' %}
+      <div class="text-6xl mb-4">❌</div>
+      <h1 class="font-heading text-2xl font-bold text-white mb-2">Export Failed</h1>
+      <p class="text-slate-400 mb-4">Something went wrong during rendering</p>
+      {% if job.error_message %}
+      <div class="bg-red-500/10 border border-red-500/20 rounded-xl p-4 text-red-400 text-sm font-mono text-left mb-6">
+        {{ job.error_message }}
+      </div>
+      {% endif %}
+
+      {% else %}
+      <!-- Processing / Pending -->
+      <div class="text-6xl mb-4 animate-spin inline-block">⚙️</div>
+      <h1 class="font-heading text-2xl font-bold text-white mb-2">
+        {% if job.status == 'processing' %}Rendering Cards...{% else %}Queued{% endif %}
+      </h1>
+      <p class="text-slate-400 mb-6">
+        Generating {{ job.total_cards }} card{{ 's' if job.total_cards != 1 else '' }} via Playwright renderer
+      </p>
+      <div class="w-full bg-white/10 rounded-full h-2 mb-2">
+        <div class="bg-indigo-500 h-2 rounded-full animate-pulse" style="width: {% if job.status == 'processing' %}65{% else %}15{% endif %}%"></div>
+      </div>
+      <p class="text-xs text-slate-600">This usually takes 10–30 seconds</p>
+      {% endif %}
+    </div>
+
+    <div class="mt-8 flex gap-3 justify-center">
+      <a href="/cards/editor" class="btn-secondary text-sm">← New Card</a>
+      <a href="/cards/dashboard" class="btn-secondary text-sm">Dashboard</a>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  {% if job.status in ['pending', 'processing'] %}
+  function pollStatus() {
+    fetch('/cards/job/{{ job.id }}/status-json')
+      .then(r => r.json())
+      .then(data => {
+        if (data.status === 'done') {
+          window.location.reload();
+        } else if (data.status === 'failed') {
+          window.location.reload();
+        } else {
+          setTimeout(pollStatus, 2000);
+        }
+      })
+      .catch(() => setTimeout(pollStatus, 3000));
+  }
+  setTimeout(pollStatus, 2000);
+  {% endif %}
+</script>
+{% endblock %}

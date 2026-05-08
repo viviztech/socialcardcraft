@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en" dir="{{ font.direction }}">
+<head>
+<meta charset="UTF-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="{{ fonts_url }}" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root { --primary: {{ brand.primary_color }}; --accent: {{ brand.accent_color }}; --w: {{ size.width }}px; --h: {{ size.height }}px; }
+  html, body { width: var(--w); height: var(--h); overflow: hidden; }
+
+  .card {
+    width: var(--w); height: var(--h);
+    position: relative; overflow: hidden;
+    font-family: {{ font.css_family }};
+    direction: {{ font.direction }};
+    background: #f8f9fa;
+    display: flex; flex-direction: column;
+  }
+
+  /* Hero image top half */
+  .hero-image {
+    height: 50%;
+    flex-shrink: 0;
+    position: relative;
+    {% if card.featured_image_url %}
+    background: url('{{ card.featured_image_url }}') center / cover no-repeat;
+    {% else %}
+    background: linear-gradient(135deg, {{ brand.primary_color }}cc, {{ brand.accent_color }}aa);
+    display: flex; align-items: center; justify-content: center;
+    {% endif %}
+  }
+
+  .hero-placeholder { font-size: calc(var(--w) * 0.1); }
+
+  .hero-overlay {
+    position: absolute; inset: 0;
+    background: linear-gradient(to bottom, transparent 50%, #f8f9fa 100%);
+  }
+
+  /* Category chip */
+  .category-chip {
+    position: absolute;
+    top: calc(var(--h) * 0.025);
+    left: calc(var(--w) * 0.04);
+    background: {{ brand.primary_color }};
+    color: #fff;
+    font-family: 'Poppins', sans-serif;
+    font-size: calc(var(--w) * 0.02);
+    font-weight: 600;
+    padding: calc(var(--w) * 0.01) calc(var(--w) * 0.025);
+    border-radius: calc(var(--w) * 0.02);
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+  }
+
+  /* Logo top-right */
+  .logo-corner {
+    position: absolute;
+    top: calc(var(--h) * 0.02);
+    right: calc(var(--w) * 0.04);
+    background: rgba(255,255,255,0.92);
+    border-radius: calc(var(--w) * 0.015);
+    padding: calc(var(--w) * 0.015) calc(var(--w) * 0.025);
+  }
+  .logo-corner img { height: calc(var(--h) * 0.05); max-width: calc(var(--w) * 0.22); object-fit: contain; }
+  .logo-corner .brand-name { font-family: 'Poppins', {{ font.css_family }}; font-size: calc(var(--w) * 0.024); font-weight: 700; color: {{ brand.primary_color }}; }
+
+  /* Content block */
+  .content-block {
+    flex: 1; display: flex; flex-direction: column;
+    padding: calc(var(--w) * 0.05) calc(var(--w) * 0.06);
+  }
+
+  .read-time {
+    font-family: 'Poppins', sans-serif;
+    font-size: calc(var(--w) * 0.02);
+    color: {{ brand.accent_color }};
+    font-weight: 600;
+    margin-bottom: calc(var(--h) * 0.015);
+    display: flex; align-items: center; gap: calc(var(--w) * 0.01);
+  }
+
+  .title {
+    font-family: {{ font.css_family }};
+    font-size: calc(var(--w) * 0.055);
+    font-weight: 700;
+    color: #111;
+    line-height: 1.25;
+    margin-bottom: calc(var(--h) * 0.015);
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .excerpt {
+    font-family: {{ font.body_family }};
+    font-size: calc(var(--w) * 0.028);
+    color: #555;
+    line-height: 1.6;
+    margin-bottom: auto;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .read-more {
+    display: inline-flex; align-items: center; gap: calc(var(--w) * 0.01);
+    background: {{ brand.primary_color }};
+    color: #fff;
+    font-family: 'Poppins', sans-serif;
+    font-size: calc(var(--w) * 0.023);
+    font-weight: 600;
+    padding: calc(var(--w) * 0.015) calc(var(--w) * 0.035);
+    border-radius: calc(var(--w) * 0.02);
+    margin-top: calc(var(--h) * 0.02);
+    width: fit-content;
+  }
+
+  .bottom-bar {
+    border-top: 1px solid #e0e0e0;
+    padding: calc(var(--h) * 0.015) calc(var(--w) * 0.06);
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: calc(var(--w) * 0.012);
+  }
+
+  .handles {
+    display: flex; gap: calc(var(--w) * 0.02);
+    font-family: 'Poppins', sans-serif;
+    font-size: calc(var(--w) * 0.02);
+    color: #666;
+  }
+
+  .contact { font-family: 'Poppins', sans-serif; font-size: calc(var(--w) * 0.02); color: #888; display: flex; gap: calc(var(--w) * 0.018); }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="hero-image">
+    {% if not card.featured_image_url %}<div class="hero-placeholder">📝</div>{% endif %}
+    <div class="hero-overlay"></div>
+    <div class="category-chip">📝 Blog</div>
+    <div class="logo-corner">
+      {% if brand.logo_url %}<img src="{{ brand.logo_url }}" alt="{{ brand.name }}">
+      {% else %}<span class="brand-name">{{ brand.name }}</span>{% endif %}
+    </div>
+  </div>
+
+  <div class="content-block">
+    <div class="read-time">⏱ 5 min read</div>
+    {% if card.title %}<div class="title">{{ card.title }}</div>{% endif %}
+    {% if card.content %}<div class="excerpt">{{ card.content }}</div>{% endif %}
+    <div class="read-more">Read More →</div>
+  </div>
+
+  <div class="bottom-bar">
+    <div class="handles">
+      {% if brand.instagram %}<span>📸 @{{ brand.instagram }}</span>{% endif %}
+      {% if brand.twitter %}<span>𝕏 @{{ brand.twitter }}</span>{% endif %}
+      {% if brand.linkedin %}<span>💼 {{ brand.linkedin }}</span>{% endif %}
+    </div>
+    <div class="contact">
+      {% if brand.website %}<span>🌐 {{ brand.website }}</span>{% endif %}
+      {% if brand.email %}<span>✉️ {{ brand.email }}</span>{% endif %}
+    </div>
+  </div>
+</div>
+</body>
+</html>

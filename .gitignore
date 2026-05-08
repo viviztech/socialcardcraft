@@ -1,0 +1,29 @@
+# Environment
+.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+venv/
+env/
+*.egg-info/
+dist/
+build/
+
+# Uploads & exports (user-generated, stored in S3)
+uploads/
+exports/
+
+# Static generated
+static/fonts/
+
+# IDE
+.DS_Store
+.vscode/
+.idea/
+
+# Logs
+*.log

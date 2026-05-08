@@ -1,0 +1,308 @@
+{% extends "base.html" %}
+{% block title %}Card Editor — SocialCardCraft{% endblock %}
+{% block head %}
+<style>
+  .template-card { @apply cursor-pointer border-2 border-white/10 rounded-2xl p-4 text-center transition-all hover:border-indigo-400/50 hover:bg-indigo-500/5; }
+  .template-card.selected { @apply border-indigo-400 bg-indigo-500/10; }
+  .size-checkbox:checked + label { @apply border-indigo-400 bg-indigo-500/15 text-indigo-300; }
+  .platform-group { }
+  .platform-title { @apply text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 mt-4; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="p-6">
+  <div class="flex items-center justify-between mb-6">
+    <div>
+      <h1 class="font-heading text-xl font-bold text-white">Card Editor</h1>
+      <p class="text-slate-400 text-sm">Design cards for every social media platform</p>
+    </div>
+    {% if user.plan == 'free' %}
+    <div class="text-xs text-slate-400 bg-white/5 border border-white/10 rounded-xl px-4 py-2">
+      {{ exports_today }}/{{ free_limit }} free exports today
+    </div>
+    {% endif %}
+  </div>
+
+  <form method="POST" action="/cards/generate" enctype="multipart/form-data" id="card-form">
+    <div class="grid grid-cols-12 gap-6">
+
+      <!-- LEFT PANEL: Settings -->
+      <div class="col-span-5 space-y-5">
+
+        <!-- Brand Kit Selector -->
+        <div class="card-glass p-5">
+          <h2 class="font-heading font-semibold text-white text-sm mb-4 flex items-center gap-2">
+            <span class="w-6 h-6 bg-indigo-500/20 rounded-lg flex items-center justify-center text-indigo-400 text-xs font-bold">1</span>
+            Brand Kit
+          </h2>
+          {% if brand_kits %}
+          <select name="brand_kit_id" id="brand_kit_id" class="input-field" required onchange="updatePreview()">
+            {% for kit in brand_kits %}
+            <option value="{{ kit.id }}" {% if selected_kit and kit.id == selected_kit.id %}selected{% endif %}>
+              {{ kit.name }} {% if kit.is_default %}(Default){% endif %}
+            </option>
+            {% endfor %}
+          </select>
+          {% else %}
+          <p class="text-slate-500 text-sm">No brand kits yet.</p>
+          <a href="/brand-kit/new" class="btn-primary inline-block mt-3 text-sm">+ Create Brand Kit</a>
+          {% endif %}
+        </div>
+
+        <!-- Card Template -->
+        <div class="card-glass p-5">
+          <h2 class="font-heading font-semibold text-white text-sm mb-4 flex items-center gap-2">
+            <span class="w-6 h-6 bg-indigo-500/20 rounded-lg flex items-center justify-center text-indigo-400 text-xs font-bold">2</span>
+            Template Style
+          </h2>
+          <div class="grid grid-cols-3 gap-2">
+            {% for tpl in card_templates %}
+            <div>
+              <input type="radio" name="card_template" value="{{ tpl.key }}" id="tpl_{{ tpl.key }}"
+                class="sr-only" {% if loop.first %}checked{% endif %} onchange="updatePreview()">
+              <label for="tpl_{{ tpl.key }}" class="template-card {% if loop.first %}selected{% endif %} cursor-pointer block"
+                onclick="document.querySelectorAll('.template-card').forEach(c=>c.classList.remove('selected')); this.classList.add('selected')">
+                <div class="text-2xl mb-1">{{ tpl.icon }}</div>
+                <div class="text-xs font-semibold text-white">{{ tpl.label }}</div>
+                <div class="text-xs text-slate-500 mt-0.5">{{ tpl.desc }}</div>
+              </label>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- Language -->
+        <div class="card-glass p-5">
+          <h2 class="font-heading font-semibold text-white text-sm mb-4 flex items-center gap-2">
+            <span class="w-6 h-6 bg-indigo-500/20 rounded-lg flex items-center justify-center text-indigo-400 text-xs font-bold">3</span>
+            Language & Font
+          </h2>
+          <select name="language" id="language_select" class="input-field" onchange="updatePreview()">
+            {% for key, label in languages.items() %}
+            <option value="{{ key }}">{{ label }}</option>
+            {% endfor %}
+          </select>
+          <p class="text-xs text-slate-600 mt-2">Uses Google Fonts for authentic Indic script rendering</p>
+        </div>
+
+        <!-- Platform Sizes -->
+        <div class="card-glass p-5">
+          <h2 class="font-heading font-semibold text-white text-sm mb-1 flex items-center gap-2">
+            <span class="w-6 h-6 bg-indigo-500/20 rounded-lg flex items-center justify-center text-indigo-400 text-xs font-bold">4</span>
+            Platform Sizes
+          </h2>
+          <div class="flex gap-2 mb-4 mt-3">
+            <button type="button" onclick="selectAll()" class="text-xs text-indigo-400 hover:text-indigo-300 bg-indigo-500/10 px-3 py-1.5 rounded-lg">Select All</button>
+            <button type="button" onclick="clearAll()" class="text-xs text-slate-400 hover:text-slate-300 bg-white/5 px-3 py-1.5 rounded-lg">Clear</button>
+          </div>
+
+          {% for platform, sizes in platforms.items() %}
+          <div class="platform-group">
+            <p class="platform-title">{{ platform }}</p>
+            <div class="grid grid-cols-1 gap-1.5">
+              {% for size in sizes %}
+              <div>
+                <input type="checkbox" id="size_{{ size.key }}" name="size_{{ size.key }}" value="{{ size.key }}"
+                  class="size-check sr-only">
+                <label for="size_{{ size.key }}"
+                  class="flex items-center justify-between px-3 py-2.5 rounded-xl border-2 border-white/8 hover:border-white/20 cursor-pointer transition-all text-slate-300 hover:text-white text-xs font-medium group"
+                  onclick="toggleSize('{{ size.key }}', this)">
+                  <span>{{ size.label }}</span>
+                  <span class="text-slate-600 group-hover:text-slate-400 font-mono">{{ size.width }}×{{ size.height }}</span>
+                </label>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+          {% endfor %}
+
+          <input type="hidden" name="selected_sizes" id="selected_sizes_input" value="[]">
+        </div>
+      </div>
+
+      <!-- RIGHT PANEL: Content + Preview -->
+      <div class="col-span-7 space-y-5">
+
+        <!-- Card Content -->
+        <div class="card-glass p-5">
+          <h2 class="font-heading font-semibold text-white text-sm mb-4 flex items-center gap-2">
+            <span class="w-6 h-6 bg-indigo-500/20 rounded-lg flex items-center justify-center text-indigo-400 text-xs font-bold">5</span>
+            Card Content
+          </h2>
+          <div class="space-y-4">
+            <div>
+              <label class="label">Title <span class="normal-case text-slate-600 font-normal">(main headline)</span></label>
+              <input type="text" name="title" id="card_title" maxlength="120" placeholder="Enter your main headline..." class="input-field" oninput="updatePreview()">
+            </div>
+            <div>
+              <label class="label">Subtitle <span class="normal-case text-slate-600 font-normal">(supporting line)</span></label>
+              <input type="text" name="subtitle" id="card_subtitle" maxlength="160" placeholder="Supporting tagline or discount %..." class="input-field" oninput="updatePreview()">
+            </div>
+            <div>
+              <label class="label">Content / Body</label>
+              <textarea name="content" id="card_content" rows="4" maxlength="500"
+                placeholder="Additional description, body copy, or CTA text..."
+                class="input-field resize-none" oninput="updatePreview()"></textarea>
+            </div>
+            <div>
+              <label class="label">Featured Image <span class="normal-case text-slate-600 font-normal">(background / product photo)</span></label>
+              <div class="relative">
+                <input type="file" name="featured_image" id="featured_image" accept="image/*"
+                  class="block w-full text-sm text-slate-400 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-indigo-500/20 file:text-indigo-300 hover:file:bg-indigo-500/30 cursor-pointer bg-white/5 border border-white/10 rounded-xl px-3 py-2.5"
+                  onchange="previewLocalImage(this)">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Live Preview -->
+        <div class="card-glass p-5">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="font-heading font-semibold text-white text-sm flex items-center gap-2">
+              <span class="w-6 h-6 bg-indigo-500/20 rounded-lg flex items-center justify-center text-indigo-400 text-xs font-bold">6</span>
+              Preview
+            </h2>
+            <div class="flex gap-2">
+              <button type="button" onclick="setPreviewSize('square')" class="text-xs bg-white/5 hover:bg-white/10 text-slate-300 px-3 py-1.5 rounded-lg">Square</button>
+              <button type="button" onclick="setPreviewSize('landscape')" class="text-xs bg-white/5 hover:bg-white/10 text-slate-300 px-3 py-1.5 rounded-lg">Landscape</button>
+              <button type="button" onclick="setPreviewSize('portrait')" class="text-xs bg-white/5 hover:bg-white/10 text-slate-300 px-3 py-1.5 rounded-lg">Story</button>
+            </div>
+          </div>
+          <div class="flex items-center justify-center bg-[#070710] rounded-xl p-4 min-h-[350px]" id="preview-container">
+            <div id="preview-frame-wrap" class="transition-all duration-300" style="width: 320px; height: 320px; overflow: hidden; border-radius: 12px; box-shadow: 0 25px 50px rgba(0,0,0,0.5);">
+              <iframe id="preview-iframe" src="" style="width: 1080px; height: 1080px; border: none; transform-origin: top left;" scrolling="no"></iframe>
+            </div>
+          </div>
+          <p class="text-xs text-slate-600 text-center mt-2">Live preview — actual export rendered by Playwright at full resolution</p>
+        </div>
+
+        <!-- Generate Button -->
+        <div class="card-glass p-5">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-semibold text-white" id="size-count-label">0 sizes selected</p>
+              <p class="text-xs text-slate-500 mt-1">Each size renders as a separate PNG in the ZIP</p>
+            </div>
+            <button type="submit" id="generate-btn"
+              class="btn-primary flex items-center gap-2 px-7 py-3 text-base disabled:opacity-40 disabled:cursor-not-allowed"
+              onclick="return buildSelectedSizes()">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+              Generate & Download ZIP
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const selectedSizes = new Set();
+
+  function toggleSize(key, label) {
+    const cb = document.getElementById(`size_${key}`);
+    if (selectedSizes.has(key)) {
+      selectedSizes.delete(key);
+      label.classList.remove('border-indigo-400', 'bg-indigo-500/15', 'text-indigo-300');
+      label.classList.add('border-white/8', 'text-slate-300');
+    } else {
+      selectedSizes.add(key);
+      label.classList.add('border-indigo-400', 'bg-indigo-500/15', 'text-indigo-300');
+      label.classList.remove('border-white/8', 'text-slate-300');
+    }
+    updateSizeCount();
+  }
+
+  function selectAll() {
+    document.querySelectorAll('[id^="size_"]').forEach(cb => {
+      const key = cb.id.replace('size_', '');
+      selectedSizes.add(key);
+      const lbl = document.querySelector(`label[for="${cb.id}"]`);
+      if (lbl) {
+        lbl.classList.add('border-indigo-400', 'bg-indigo-500/15', 'text-indigo-300');
+        lbl.classList.remove('border-white/8', 'text-slate-300');
+      }
+    });
+    updateSizeCount();
+  }
+
+  function clearAll() {
+    selectedSizes.clear();
+    document.querySelectorAll('label[for^="size_"]').forEach(lbl => {
+      lbl.classList.remove('border-indigo-400', 'bg-indigo-500/15', 'text-indigo-300');
+      lbl.classList.add('border-white/8', 'text-slate-300');
+    });
+    updateSizeCount();
+  }
+
+  function updateSizeCount() {
+    const n = selectedSizes.size;
+    document.getElementById('size-count-label').textContent = `${n} size${n !== 1 ? 's' : ''} selected`;
+  }
+
+  function buildSelectedSizes() {
+    if (selectedSizes.size === 0) {
+      alert('Please select at least one platform size.');
+      return false;
+    }
+    document.getElementById('selected_sizes_input').value = JSON.stringify([...selectedSizes]);
+    return true;
+  }
+
+  // Preview dimensions
+  const previewSizes = {
+    square:    { w: 1080, h: 1080, display: 320 },
+    landscape: { w: 1200, h: 630, display: 380 },
+    portrait:  { w: 1080, h: 1920, display: 200 },
+  };
+  let currentPreviewMode = 'square';
+
+  function setPreviewSize(mode) {
+    currentPreviewMode = mode;
+    applyPreviewScale();
+  }
+
+  function applyPreviewScale() {
+    const { w, h, display } = previewSizes[currentPreviewMode];
+    const scale = display / w;
+    const wrap = document.getElementById('preview-frame-wrap');
+    const iframe = document.getElementById('preview-iframe');
+    wrap.style.width = `${display}px`;
+    wrap.style.height = `${Math.round(h * scale)}px`;
+    iframe.style.width = `${w}px`;
+    iframe.style.height = `${h}px`;
+    iframe.style.transform = `scale(${scale})`;
+  }
+
+  let localImageDataUrl = '';
+  function previewLocalImage(input) {
+    if (input.files && input.files[0]) {
+      const reader = new FileReader();
+      reader.onload = e => { localImageDataUrl = e.target.result; updatePreview(); };
+      reader.readAsDataURL(input.files[0]);
+    }
+  }
+
+  function updatePreview() {
+    const tpl = document.querySelector('input[name="card_template"]:checked')?.value || 'announcement';
+    const title = encodeURIComponent(document.getElementById('card_title')?.value || '');
+    const subtitle = encodeURIComponent(document.getElementById('card_subtitle')?.value || '');
+    const content = encodeURIComponent(document.getElementById('card_content')?.value || '');
+    const language = document.getElementById('language_select')?.value || 'english';
+    const kit_id = document.getElementById('brand_kit_id')?.value || '';
+    const img = encodeURIComponent(localImageDataUrl || '');
+    const { w, h } = previewSizes[currentPreviewMode];
+    document.getElementById('preview-iframe').src =
+      `/cards/preview?tpl=${tpl}&title=${title}&subtitle=${subtitle}&content=${content}&lang=${language}&kit_id=${kit_id}&w=${w}&h=${h}&img=${img}`;
+    applyPreviewScale();
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    applyPreviewScale();
+    updatePreview();
+  });
+</script>
+{% endblock %}

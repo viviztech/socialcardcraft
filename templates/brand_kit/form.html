@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% block title %}{% if kit %}Edit{% else %}New{% endif %} Brand Kit — SocialCardCraft{% endblock %}
+{% block content %}
+<div class="p-8 max-w-3xl">
+  <div class="mb-8">
+    <a href="/brand-kit/" class="text-slate-500 hover:text-white text-sm mb-4 inline-flex items-center gap-1">← Back to Brand Kits</a>
+    <h1 class="font-heading text-2xl font-bold text-white mt-2">{% if kit %}Edit Brand Kit{% else %}New Brand Kit{% endif %}</h1>
+  </div>
+
+  <form method="POST" action="/brand-kit/{% if kit %}{{ kit.id }}/edit{% else %}new{% endif %}" enctype="multipart/form-data" class="space-y-6">
+
+    <!-- Identity -->
+    <div class="card-glass p-6">
+      <h2 class="font-heading font-semibold text-white text-sm mb-5 flex items-center gap-2">
+        <span class="w-6 h-6 bg-indigo-500/20 rounded-lg flex items-center justify-center text-indigo-400 text-xs font-bold">A</span>
+        Brand Identity
+      </h2>
+      <div class="grid grid-cols-2 gap-5">
+        <div class="col-span-2">
+          <label class="label">Brand Name</label>
+          <input type="text" name="name" value="{{ kit.name if kit else '' }}" required placeholder="My Business" class="input-field">
+        </div>
+        <div>
+          <label class="label">Primary Color</label>
+          <div class="flex gap-2">
+            <input type="color" name="primary_color" value="{{ kit.primary_color if kit else '#6366f1' }}"
+              class="w-12 h-11 rounded-xl cursor-pointer bg-transparent border border-white/10 p-0.5">
+            <input type="text" id="primary_hex" value="{{ kit.primary_color if kit else '#6366f1' }}"
+              class="input-field flex-1 font-mono" oninput="document.querySelector('[name=primary_color]').value=this.value">
+          </div>
+        </div>
+        <div>
+          <label class="label">Accent Color</label>
+          <div class="flex gap-2">
+            <input type="color" name="accent_color" value="{{ kit.accent_color if kit else '#f59e0b' }}"
+              class="w-12 h-11 rounded-xl cursor-pointer bg-transparent border border-white/10 p-0.5">
+            <input type="text" id="accent_hex" value="{{ kit.accent_color if kit else '#f59e0b' }}"
+              class="input-field flex-1 font-mono" oninput="document.querySelector('[name=accent_color]').value=this.value">
+          </div>
+        </div>
+        <div>
+          <label class="label">Brand Logo</label>
+          {% if kit and kit.logo_url %}
+          <img src="{{ kit.logo_url }}" class="h-10 mb-2 object-contain">
+          <p class="text-xs text-slate-500 mb-2">Upload new logo to replace</p>
+          {% endif %}
+          <input type="file" name="logo" accept="image/*"
+            class="block w-full text-sm text-slate-400 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-500/20 file:text-indigo-300 hover:file:bg-indigo-500/30 cursor-pointer bg-white/5 border border-white/10 rounded-xl px-3 py-2.5">
+        </div>
+        <div>
+          <label class="label">Content Language</label>
+          <select name="font_language" class="input-field">
+            {% for key, label in languages.items() %}
+            <option value="{{ key }}" {% if kit and kit.font_language == key %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Social Handles -->
+    <div class="card-glass p-6">
+      <h2 class="font-heading font-semibold text-white text-sm mb-5 flex items-center gap-2">
+        <span class="w-6 h-6 bg-indigo-500/20 rounded-lg flex items-center justify-center text-indigo-400 text-xs font-bold">B</span>
+        Social Media Handles
+      </h2>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="label">📸 Instagram</label>
+          <input type="text" name="instagram" value="{{ kit.instagram or '' if kit else '' }}" placeholder="yourbrand" class="input-field">
+        </div>
+        <div>
+          <label class="label">📘 Facebook</label>
+          <input type="text" name="facebook" value="{{ kit.facebook or '' if kit else '' }}" placeholder="yourbrand" class="input-field">
+        </div>
+        <div>
+          <label class="label">𝕏 X / Twitter</label>
+          <input type="text" name="twitter" value="{{ kit.twitter or '' if kit else '' }}" placeholder="yourbrand" class="input-field">
+        </div>
+        <div>
+          <label class="label">💼 LinkedIn</label>
+          <input type="text" name="linkedin" value="{{ kit.linkedin or '' if kit else '' }}" placeholder="yourcompany" class="input-field">
+        </div>
+        <div>
+          <label class="label">▶️ YouTube</label>
+          <input type="text" name="youtube" value="{{ kit.youtube or '' if kit else '' }}" placeholder="@yourchannel" class="input-field">
+        </div>
+        <div>
+          <label class="label">📱 WhatsApp</label>
+          <input type="text" name="whatsapp" value="{{ kit.whatsapp or '' if kit else '' }}" placeholder="+91 99999 99999" class="input-field">
+        </div>
+      </div>
+    </div>
+
+    <!-- Contact Details -->
+    <div class="card-glass p-6">
+      <h2 class="font-heading font-semibold text-white text-sm mb-5 flex items-center gap-2">
+        <span class="w-6 h-6 bg-indigo-500/20 rounded-lg flex items-center justify-center text-indigo-400 text-xs font-bold">C</span>
+        Contact Details
+      </h2>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="label">📞 Phone / WhatsApp</label>
+          <input type="text" name="phone" value="{{ kit.phone or '' if kit else '' }}" placeholder="+91 99999 99999" class="input-field">
+        </div>
+        <div>
+          <label class="label">✉️ Email</label>
+          <input type="email" name="email" value="{{ kit.email or '' if kit else '' }}" placeholder="hello@yourbrand.com" class="input-field">
+        </div>
+        <div class="col-span-2">
+          <label class="label">🌐 Website</label>
+          <input type="text" name="website" value="{{ kit.website or '' if kit else '' }}" placeholder="www.yourbrand.com" class="input-field">
+          <p class="text-xs text-slate-600 mt-1.5">Used to auto-generate QR code on cards</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex gap-3">
+      <button type="submit" class="btn-primary px-8 py-3">
+        {% if kit %}Save Changes{% else %}Create Brand Kit{% endif %}
+      </button>
+      <a href="/brand-kit/" class="btn-secondary px-6 py-3">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

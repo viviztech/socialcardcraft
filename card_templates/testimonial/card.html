@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en" dir="{{ font.direction }}">
+<head>
+<meta charset="UTF-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="{{ fonts_url }}" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root { --primary: {{ brand.primary_color }}; --accent: {{ brand.accent_color }}; --w: {{ size.width }}px; --h: {{ size.height }}px; }
+  html, body { width: var(--w); height: var(--h); overflow: hidden; }
+
+  .card {
+    width: var(--w); height: var(--h);
+    background: #fff;
+    position: relative; overflow: hidden;
+    font-family: {{ font.css_family }};
+    direction: {{ font.direction }};
+    display: flex; flex-direction: column;
+  }
+
+  /* Left accent bar */
+  .left-accent {
+    position: absolute; left: 0; top: 0; bottom: 0;
+    width: calc(var(--w) * 0.012);
+    background: linear-gradient(180deg, {{ brand.primary_color }}, {{ brand.accent_color }});
+  }
+
+  /* Top gradient band */
+  .top-band {
+    background: {{ brand.primary_color }};
+    height: calc(var(--h) * 0.12);
+    flex-shrink: 0;
+    display: flex; align-items: center;
+    padding: 0 calc(var(--w) * 0.07);
+  }
+
+  .logo-box img { height: calc(var(--h) * 0.07); max-width: calc(var(--w) * 0.35); object-fit: contain; }
+  .logo-box .brand-name { font-family: 'Poppins', {{ font.css_family }}; font-size: calc(var(--w) * 0.035); font-weight: 700; color: #fff; }
+
+  .body-wrap {
+    flex: 1; display: flex; flex-direction: column;
+    padding: calc(var(--w) * 0.07) calc(var(--w) * 0.07) calc(var(--w) * 0.05);
+    position: relative;
+  }
+
+  /* Stars */
+  .stars {
+    font-size: calc(var(--w) * 0.04);
+    color: {{ brand.accent_color }};
+    letter-spacing: 0.05em;
+    margin-bottom: calc(var(--h) * 0.025);
+  }
+
+  /* Big quote mark bg */
+  .bg-quote {
+    position: absolute;
+    font-family: Georgia, serif;
+    font-size: calc(var(--w) * 0.38);
+    color: {{ brand.primary_color }};
+    opacity: 0.05;
+    line-height: 1;
+    top: calc(var(--h) * 0.05);
+    right: calc(var(--w) * 0.04);
+    pointer-events: none;
+  }
+
+  .review-text {
+    font-family: {{ font.css_family }};
+    font-size: calc(var(--w) * 0.05);
+    font-weight: 500;
+    color: #222;
+    line-height: 1.55;
+    font-style: italic;
+    margin-bottom: calc(var(--h) * 0.035);
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    position: relative; z-index: 2;
+  }
+
+  .reviewer {
+    margin-top: auto;
+    display: flex; align-items: center; gap: calc(var(--w) * 0.03);
+    position: relative; z-index: 2;
+  }
+
+  .reviewer-avatar {
+    width: calc(var(--w) * 0.1);
+    height: calc(var(--w) * 0.1);
+    border-radius: 50%;
+    overflow: hidden;
+    background: {{ brand.primary_color }}22;
+    display: flex; align-items: center; justify-content: center;
+    font-size: calc(var(--w) * 0.04);
+    flex-shrink: 0;
+    border: 3px solid {{ brand.accent_color }};
+  }
+
+  .reviewer-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+  .reviewer-info .name {
+    font-family: 'Poppins', {{ font.css_family }};
+    font-size: calc(var(--w) * 0.03);
+    font-weight: 700;
+    color: {{ brand.primary_color }};
+  }
+
+  .reviewer-info .role {
+    font-family: 'Poppins', sans-serif;
+    font-size: calc(var(--w) * 0.022);
+    color: #888;
+  }
+
+  .bottom-bar {
+    border-top: 1px solid #eee;
+    padding: calc(var(--h) * 0.018) calc(var(--w) * 0.07);
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: calc(var(--w) * 0.015);
+  }
+
+  .social-row {
+    display: flex; gap: calc(var(--w) * 0.02);
+    font-family: 'Poppins', sans-serif;
+    font-size: calc(var(--w) * 0.02);
+    color: #777;
+  }
+
+  .contact-row {
+    font-family: 'Poppins', sans-serif;
+    font-size: calc(var(--w) * 0.02);
+    color: #888;
+    display: flex; gap: calc(var(--w) * 0.018);
+  }
+
+  .qr-box { background: #f5f5f5; border-radius: calc(var(--w) * 0.01); padding: calc(var(--w) * 0.006); }
+  .qr-box img { width: calc(var(--w) * 0.085); height: calc(var(--w) * 0.085); display: block; }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="left-accent"></div>
+
+  <div class="top-band">
+    <div class="logo-box">
+      {% if brand.logo_url %}<img src="{{ brand.logo_url }}" alt="{{ brand.name }}">
+      {% else %}<span class="brand-name">{{ brand.name }}</span>{% endif %}
+    </div>
+  </div>
+
+  <div class="body-wrap">
+    <div class="bg-quote">"</div>
+    <div class="stars">★★★★★</div>
+
+    {% if card.title %}
+    <div class="review-text">"{{ card.title }}"</div>
+    {% endif %}
+
+    <div class="reviewer">
+      <div class="reviewer-avatar">
+        {% if card.featured_image_url %}
+          <img src="{{ card.featured_image_url }}" alt="">
+        {% else %}
+          👤
+        {% endif %}
+      </div>
+      <div class="reviewer-info">
+        <div class="name">{{ card.subtitle or "Happy Customer" }}</div>
+        <div class="role">{{ card.content or "Verified Buyer" }}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bottom-bar">
+    <div class="social-row">
+      {% if brand.instagram %}<span>📸 @{{ brand.instagram }}</span>{% endif %}
+      {% if brand.facebook %}<span>📘 {{ brand.facebook }}</span>{% endif %}
+      {% if brand.twitter %}<span>𝕏 @{{ brand.twitter }}</span>{% endif %}
+    </div>
+    <div class="contact-row">
+      {% if brand.phone %}<span>📞 {{ brand.phone }}</span>{% endif %}
+      {% if brand.website %}<span>🌐 {{ brand.website }}</span>{% endif %}
+    </div>
+    {% if qr_code and brand.website %}
+    <div class="qr-box"><img src="{{ qr_code }}" alt="QR"></div>
+    {% endif %}
+  </div>
+</div>
+</body>
+</html>

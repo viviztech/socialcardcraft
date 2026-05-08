@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en" dir="{{ font.direction }}">
+<head>
+<meta charset="UTF-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="{{ fonts_url }}" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root { --primary: {{ brand.primary_color }}; --accent: {{ brand.accent_color }}; --w: {{ size.width }}px; --h: {{ size.height }}px; }
+  html, body { width: var(--w); height: var(--h); overflow: hidden; }
+
+  .card {
+    width: var(--w); height: var(--h);
+    position: relative; overflow: hidden;
+    font-family: {{ font.css_family }};
+    direction: {{ font.direction }};
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center;
+  }
+
+  .bg {
+    position: absolute; inset: 0;
+    {% if card.featured_image_url %}
+    background: url('{{ card.featured_image_url }}') center / cover no-repeat;
+    {% else %}
+    background: linear-gradient(135deg, {{ brand.primary_color }} 0%, {{ brand.accent_color }} 100%);
+    {% endif %}
+  }
+
+  .bg-overlay {
+    position: absolute; inset: 0;
+    {% if card.featured_image_url %}
+    background: rgba(0,0,0,0.72);
+    {% else %}
+    background: rgba(0,0,0,0.3);
+    {% endif %}
+  }
+
+  /* Decorative quote marks */
+  .big-quote {
+    position: absolute;
+    font-family: Georgia, serif;
+    font-size: calc(var(--w) * 0.45);
+    color: rgba(255,255,255,0.06);
+    line-height: 1;
+    top: calc(var(--h) * -0.05);
+    left: calc(var(--w) * 0.02);
+    z-index: 1;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  .content-wrap {
+    position: relative; z-index: 5;
+    padding: calc(var(--w) * 0.1);
+    display: flex; flex-direction: column; align-items: center;
+    max-width: 100%;
+  }
+
+  .open-quote {
+    font-family: Georgia, serif;
+    font-size: calc(var(--w) * 0.14);
+    color: {{ brand.accent_color }};
+    line-height: 0.7;
+    margin-bottom: calc(var(--h) * 0.02);
+  }
+
+  .quote-text {
+    font-family: {{ font.css_family }};
+    font-size: calc(var(--w) * 0.065);
+    font-weight: 600;
+    color: #fff;
+    line-height: 1.4;
+    margin-bottom: calc(var(--h) * 0.03);
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .subtitle-text {
+    font-family: {{ font.body_family }};
+    font-size: calc(var(--w) * 0.032);
+    color: rgba(255,255,255,0.75);
+    margin-bottom: calc(var(--h) * 0.03);
+    font-style: italic;
+  }
+
+  .divider-line {
+    width: calc(var(--w) * 0.12);
+    height: 2px;
+    background: {{ brand.accent_color }};
+    border-radius: 2px;
+    margin: 0 auto calc(var(--h) * 0.03);
+  }
+
+  .brand-strip {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    background: rgba(0,0,0,0.55);
+    backdrop-filter: blur(8px);
+    padding: calc(var(--h) * 0.022) calc(var(--w) * 0.06);
+    display: flex; align-items: center; justify-content: space-between;
+    z-index: 6;
+  }
+
+  .brand-left {
+    display: flex; align-items: center; gap: calc(var(--w) * 0.02);
+  }
+
+  .brand-left img { height: calc(var(--h) * 0.05); max-width: calc(var(--w) * 0.25); object-fit: contain; }
+  .brand-name-text {
+    font-family: 'Poppins', {{ font.css_family }};
+    font-size: calc(var(--w) * 0.028);
+    font-weight: 700;
+    color: #fff;
+  }
+
+  .social-strip {
+    display: flex; gap: calc(var(--w) * 0.018);
+    font-family: 'Poppins', sans-serif;
+    font-size: calc(var(--w) * 0.019);
+    color: rgba(255,255,255,0.75);
+  }
+
+  .social-item { display: flex; align-items: center; gap: calc(var(--w) * 0.006); }
+
+  /* Side accent bars */
+  .side-bar-left {
+    position: absolute;
+    left: 0; top: 15%; bottom: 15%;
+    width: calc(var(--w) * 0.006);
+    background: {{ brand.accent_color }};
+    border-radius: 0 4px 4px 0;
+    z-index: 4;
+  }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="bg"></div>
+  <div class="bg-overlay"></div>
+  <div class="big-quote">"</div>
+  <div class="side-bar-left"></div>
+
+  <div class="content-wrap">
+    <div class="open-quote">"</div>
+    {% if card.title %}
+    <div class="quote-text">{{ card.title }}</div>
+    {% endif %}
+    <div class="divider-line"></div>
+    {% if card.subtitle %}
+    <div class="subtitle-text">— {{ card.subtitle }}</div>
+    {% endif %}
+    {% if card.content %}
+    <div class="subtitle-text" style="font-style:normal; font-size: calc(var(--w) * 0.026);">{{ card.content }}</div>
+    {% endif %}
+  </div>
+
+  <div class="brand-strip">
+    <div class="brand-left">
+      {% if brand.logo_url %}
+        <img src="{{ brand.logo_url }}" alt="{{ brand.name }}">
+      {% else %}
+        <span class="brand-name-text">{{ brand.name }}</span>
+      {% endif %}
+    </div>
+    <div class="social-strip">
+      {% if brand.instagram %}<span class="social-item">📸 @{{ brand.instagram }}</span>{% endif %}
+      {% if brand.twitter %}<span class="social-item">𝕏 @{{ brand.twitter }}</span>{% endif %}
+      {% if brand.website %}<span class="social-item">🌐 {{ brand.website }}</span>{% endif %}
+    </div>
+  </div>
+</div>
+</body>
+</html>
