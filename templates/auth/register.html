@@ -1,25 +1,30 @@
 {% extends "base.html" %}
 {% block title %}Register — SocialCardCraft{% endblock %}
 {% block full_content %}
-<div class="min-h-screen flex items-center justify-center px-4 bg-[#0c0c18]">
-  <div class="absolute inset-0 overflow-hidden pointer-events-none">
-    <div class="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-purple-600/10 rounded-full blur-3xl"></div>
+<div class="min-h-screen flex items-center justify-center px-4" style="background:var(--bg-page)">
+  <div class="absolute inset-0 overflow-hidden pointer-events-none" style="z-index:0">
+    <div class="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[400px] rounded-full blur-3xl"
+      style="background:rgba(124,58,237,0.07)"></div>
   </div>
 
-  <div class="w-full max-w-md relative">
+  <div class="w-full max-w-md relative" style="z-index:1">
     <div class="text-center mb-8">
       <div class="inline-flex items-center gap-3 mb-4">
         <div class="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-xl">
           <span class="text-white text-xl font-bold">SC</span>
         </div>
-        <span class="font-heading font-bold text-2xl text-white">SocialCard<span class="text-indigo-400">Craft</span></span>
+        <span style="font-family:'Poppins',sans-serif;font-weight:700;font-size:1.5rem;color:var(--text-primary)">
+          SocialCard<span style="color:#6366f1">Craft</span>
+        </span>
       </div>
-      <p class="text-slate-400 text-sm">Create your free account</p>
+      <p class="text-sm" style="color:var(--text-secondary)">Create your free account</p>
     </div>
 
-    <div class="bg-white/5 border border-white/10 rounded-2xl p-8 backdrop-blur-sm">
+    <div class="auth-card card-glass p-8">
       {% if error %}
-      <div class="bg-red-500/10 border border-red-500/20 rounded-xl p-3 mb-5 text-red-400 text-sm">{{ error }}</div>
+      <div class="p-3 mb-5 rounded-xl text-sm" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);color:#f87171">
+        {{ error }}
+      </div>
       {% endif %}
 
       <form method="POST" action="/auth/register" class="space-y-5">
@@ -35,12 +40,12 @@
           <label class="label">Password</label>
           <input type="password" name="password" required placeholder="Min 8 characters" minlength="8" class="input-field">
         </div>
-        <button type="submit" class="w-full btn-primary py-3 text-center text-base">Create Account →</button>
+        <button type="submit" class="w-full btn-primary py-3 text-base">Create Account →</button>
       </form>
 
-      <p class="text-center text-sm text-slate-500 mt-6">
+      <p class="text-center text-sm mt-6" style="color:var(--text-muted)">
         Already have an account?
-        <a href="/auth/login" class="text-indigo-400 hover:text-indigo-300 font-medium ml-1">Sign in</a>
+        <a href="/auth/login" style="color:#6366f1;font-weight:500;margin-left:0.25rem">Sign in</a>
       </p>
     </div>
   </div>

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,29 +12,132 @@
       theme: {
         extend: {
           fontFamily: { sans: ['Inter', 'sans-serif'], heading: ['Poppins', 'sans-serif'] },
-          colors: {
-            brand: { 50: '#eef2ff', 100: '#e0e7ff', 500: '#6366f1', 600: '#4f46e5', 700: '#4338ca' },
-            accent: { 400: '#fbbf24', 500: '#f59e0b', 600: '#d97706' }
-          }
         }
       }
     }
+    // Apply saved theme before paint to avoid flash
+    (function() {
+      const t = localStorage.getItem('scc_theme') || 'dark';
+      document.documentElement.setAttribute('data-theme', t);
+    })();
   </script>
   <style>
-    body { font-family: 'Inter', sans-serif; }
+    /* ── CSS Variables — Dark (default) ───────────────────────────── */
+    :root, [data-theme="dark"] {
+      --bg-page:       #0c0c18;
+      --bg-sidebar:    #0f0f20;
+      --bg-card:       rgba(255,255,255,0.05);
+      --bg-input:      rgba(255,255,255,0.05);
+      --bg-input-focus:rgba(255,255,255,0.08);
+      --bg-hover:      rgba(255,255,255,0.08);
+      --bg-secondary:  rgba(255,255,255,0.1);
 
-    /* Sidebar nav link */
+      --border:        rgba(255,255,255,0.1);
+      --border-sidebar:rgba(255,255,255,0.05);
+      --border-focus:  #818cf8;
+
+      --text-primary:  #ffffff;
+      --text-secondary:#94a3b8;
+      --text-muted:    #475569;
+      --text-faint:    #334155;
+
+      --sidebar-link:        #94a3b8;
+      --sidebar-link-hover:  #ffffff;
+      --sidebar-link-active-bg: rgba(99,102,241,0.2);
+      --sidebar-link-active:    #a5b4fc;
+
+      --select-bg:     #1e1e3a;
+      --scrollbar:     rgba(255,255,255,0.1);
+
+      --size-label-border: rgba(255,255,255,0.08);
+      --size-label-hover:  rgba(255,255,255,0.2);
+      --size-label-color:  #94a3b8;
+      --size-label-hover-color: #ffffff;
+
+      --table-row-hover: rgba(255,255,255,0.02);
+      --preview-bg: #070710;
+
+      --plan-free-bg:    rgba(99,102,241,0.1);
+      --plan-free-border:rgba(99,102,241,0.2);
+      --plan-pro-bg:     rgba(245,158,11,0.1);
+      --plan-pro-border: rgba(245,158,11,0.2);
+
+      --toggle-bg: rgba(255,255,255,0.08);
+      --toggle-icon: "☀️";
+    }
+
+    /* ── CSS Variables — Light ────────────────────────────────────── */
+    [data-theme="light"] {
+      --bg-page:       #f1f5f9;
+      --bg-sidebar:    #ffffff;
+      --bg-card:       #ffffff;
+      --bg-input:      #f8fafc;
+      --bg-input-focus:#eef2ff;
+      --bg-hover:      #f1f5f9;
+      --bg-secondary:  #e2e8f0;
+
+      --border:        #e2e8f0;
+      --border-sidebar:#e2e8f0;
+      --border-focus:  #6366f1;
+
+      --text-primary:  #0f172a;
+      --text-secondary:#475569;
+      --text-muted:    #94a3b8;
+      --text-faint:    #cbd5e1;
+
+      --sidebar-link:        #64748b;
+      --sidebar-link-hover:  #0f172a;
+      --sidebar-link-active-bg: #eef2ff;
+      --sidebar-link-active:    #4f46e5;
+
+      --select-bg:     #f8fafc;
+      --scrollbar:     #e2e8f0;
+
+      --size-label-border: #e2e8f0;
+      --size-label-hover:  #e2e8f0;
+      --size-label-color:  #64748b;
+      --size-label-hover-color: #0f172a;
+
+      --table-row-hover: #f8fafc;
+      --preview-bg: #e2e8f0;
+
+      --plan-free-bg:    #eef2ff;
+      --plan-free-border:#c7d2fe;
+      --plan-pro-bg:     #fffbeb;
+      --plan-pro-border: #fde68a;
+
+      --toggle-bg: #e2e8f0;
+      --toggle-icon: "🌙";
+    }
+
+    /* ── Base ────────────────────────────────────────────────────── */
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-page);
+      color: var(--text-primary);
+      min-height: 100vh;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    /* ── Sidebar ─────────────────────────────────────────────────── */
+    .sidebar {
+      background: var(--bg-sidebar);
+      border-right: 1px solid var(--border-sidebar);
+    }
+    .sidebar-logo-text { color: var(--text-primary); }
+    .sidebar-section-label { color: var(--text-muted); }
+
     .sidebar-link {
       display: flex; align-items: center; gap: 0.75rem;
       padding: 0.625rem 1rem; border-radius: 0.75rem;
       font-size: 0.875rem; font-weight: 500;
-      color: #94a3b8; text-decoration: none;
+      color: var(--sidebar-link); text-decoration: none;
       transition: background 0.15s, color 0.15s;
     }
-    .sidebar-link:hover { background: rgba(255,255,255,0.1); color: #fff; }
-    .sidebar-link.active { background: rgba(99,102,241,0.2); color: #a5b4fc; }
+    .sidebar-link:hover { background: var(--sidebar-link-active-bg); color: var(--sidebar-link-hover); }
+    .sidebar-link.active { background: var(--sidebar-link-active-bg); color: var(--sidebar-link-active); }
 
-    /* Buttons */
+    /* ── Buttons ─────────────────────────────────────────────────── */
     .btn-primary {
       background: #6366f1; color: #fff; font-weight: 600;
       padding: 0.625rem 1.25rem; border-radius: 0.75rem;
@@ -46,100 +149,153 @@
     .btn-primary:hover { background: #4f46e5; }
 
     .btn-secondary {
-      background: rgba(255,255,255,0.1); color: #fff; font-weight: 500;
+      background: var(--bg-secondary); color: var(--text-primary); font-weight: 500;
       padding: 0.625rem 1.25rem; border-radius: 0.75rem;
-      transition: background 0.15s; cursor: pointer; border: none;
+      transition: background 0.15s; cursor: pointer; border: 1px solid var(--border);
       display: inline-block; text-decoration: none; text-align: center;
     }
-    .btn-secondary:hover { background: rgba(255,255,255,0.2); }
+    .btn-secondary:hover { background: var(--bg-hover); }
 
-    /* Glass card */
+    /* ── Card ────────────────────────────────────────────────────── */
     .card-glass {
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.1);
+      background: var(--bg-card);
+      border: 1px solid var(--border);
       border-radius: 1rem;
-      backdrop-filter: blur(8px);
     }
+    [data-theme="dark"] .card-glass { backdrop-filter: blur(8px); }
 
-    /* Form inputs */
+    /* ── Inputs ──────────────────────────────────────────────────── */
     .input-field {
       width: 100%;
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.1);
+      background: var(--bg-input);
+      border: 1px solid var(--border);
       border-radius: 0.75rem;
       padding: 0.75rem 1rem;
-      color: #fff;
+      color: var(--text-primary);
       font-size: 0.875rem;
       transition: border-color 0.15s, background 0.15s;
       outline: none;
       box-sizing: border-box;
     }
-    .input-field::placeholder { color: #64748b; }
-    .input-field:focus { border-color: #818cf8; background: rgba(255,255,255,0.08); }
+    .input-field::placeholder { color: var(--text-muted); }
+    .input-field:focus { border-color: var(--border-focus); background: var(--bg-input-focus); }
+    select.input-field option { background: var(--select-bg); color: var(--text-primary); }
 
-    select.input-field option { background: #1e1e3a; color: #fff; }
-
-    /* Form label */
     .label {
       display: block; font-size: 0.7rem; font-weight: 600;
-      color: #94a3b8; text-transform: uppercase; letter-spacing: 0.08em;
-      margin-bottom: 0.5rem;
+      color: var(--text-secondary); text-transform: uppercase;
+      letter-spacing: 0.08em; margin-bottom: 0.5rem;
     }
 
-    /* Template card (editor) */
+    /* ── Template cards ──────────────────────────────────────────── */
     .template-card {
       cursor: pointer;
-      border: 2px solid rgba(255,255,255,0.1);
+      border: 2px solid var(--border);
       border-radius: 1rem; padding: 1rem; text-align: center;
       transition: border-color 0.15s, background 0.15s;
     }
     .template-card:hover { border-color: rgba(99,102,241,0.5); background: rgba(99,102,241,0.05); }
     .template-card.selected { border-color: #818cf8; background: rgba(99,102,241,0.1); }
+    [data-theme="light"] .template-card .text-white { color: var(--text-primary) !important; }
 
-    /* Size checkbox labels */
+    /* ── Size labels ─────────────────────────────────────────────── */
     .size-label {
       display: flex; align-items: center; justify-content: space-between;
       padding: 0.625rem 0.75rem; border-radius: 0.75rem;
-      border: 2px solid rgba(255,255,255,0.08);
-      color: #94a3b8; font-size: 0.75rem; font-weight: 500;
+      border: 2px solid var(--size-label-border);
+      color: var(--size-label-color); font-size: 0.75rem; font-weight: 500;
       cursor: pointer; transition: border-color 0.15s, color 0.15s, background 0.15s;
     }
-    .size-label:hover { border-color: rgba(255,255,255,0.2); color: #fff; }
+    .size-label:hover { border-color: var(--size-label-hover); color: var(--size-label-hover-color); }
     .size-label.selected { border-color: #818cf8; background: rgba(99,102,241,0.15); color: #a5b4fc; }
 
     .platform-title {
-      font-size: 0.65rem; font-weight: 700; color: #475569;
+      font-size: 0.65rem; font-weight: 700; color: var(--text-muted);
       text-transform: uppercase; letter-spacing: 0.12em;
       margin-top: 1rem; margin-bottom: 0.5rem;
     }
 
-    /* Scrollbar */
+    /* ── Tables ──────────────────────────────────────────────────── */
+    [data-theme="light"] table { color: var(--text-primary); }
+    [data-theme="light"] tr:hover { background: var(--table-row-hover); }
+    [data-theme="light"] .divide-white\/5 > * + * { border-color: var(--border) !important; }
+    [data-theme="light"] .border-white\/5 { border-color: var(--border) !important; }
+    [data-theme="light"] .border-b { border-color: var(--border) !important; }
+
+    /* ── Light mode overrides for text ──────────────────────────── */
+    [data-theme="light"] .text-white { color: var(--text-primary) !important; }
+    [data-theme="light"] .text-slate-400 { color: #64748b !important; }
+    [data-theme="light"] .text-slate-500 { color: #94a3b8 !important; }
+    [data-theme="light"] .text-slate-300 { color: #475569 !important; }
+    [data-theme="light"] .text-slate-600 { color: #94a3b8 !important; }
+    [data-theme="light"] .text-indigo-400 { color: #4f46e5 !important; }
+    [data-theme="light"] .text-indigo-300 { color: #4f46e5 !important; }
+    [data-theme="light"] .text-amber-300  { color: #d97706 !important; }
+    [data-theme="light"] .text-amber-400  { color: #d97706 !important; }
+    [data-theme="light"] .text-green-400  { color: #16a34a !important; }
+    [data-theme="light"] .text-red-400    { color: #dc2626 !important; }
+    [data-theme="light"] .text-yellow-300 { color: #ca8a04 !important; }
+
+    /* ── Light mode bg overrides ─────────────────────────────────── */
+    [data-theme="light"] .bg-\[\#0c0c18\]  { background: var(--bg-page) !important; }
+    [data-theme="light"] .bg-\[\#070710\]  { background: var(--preview-bg) !important; }
+    [data-theme="light"] .bg-\[\#0f0f20\]  { background: var(--bg-sidebar) !important; }
+    [data-theme="light"] .bg-\[#0c0c18\]   { background: var(--bg-page) !important; }
+    [data-theme="light"] .bg-white\/5      { background: var(--bg-card) !important; }
+    [data-theme="light"] .bg-white\/10     { background: var(--bg-secondary) !important; }
+
+    /* ── Theme toggle button ─────────────────────────────────────── */
+    .theme-toggle {
+      width: 2rem; height: 2rem; border-radius: 0.6rem;
+      border: 1px solid var(--border); background: var(--toggle-bg);
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      font-size: 0.85rem; transition: background 0.15s;
+      flex-shrink: 0;
+    }
+    .theme-toggle:hover { background: var(--bg-hover); }
+
+    /* ── Plan badges ─────────────────────────────────────────────── */
+    .plan-badge-free {
+      background: var(--plan-free-bg); border: 1px solid var(--plan-free-border);
+    }
+    .plan-badge-pro {
+      background: var(--plan-pro-bg); border: 1px solid var(--plan-pro-border);
+    }
+
+    /* ── Auth pages ──────────────────────────────────────────────── */
+    [data-theme="light"] .auth-card {
+      background: #ffffff; border: 1px solid #e2e8f0;
+    }
+
+    /* ── Scrollbar ───────────────────────────────────────────────── */
     ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb { background: var(--scrollbar); border-radius: 3px; }
   </style>
   {% block head %}{% endblock %}
 </head>
-<body class="bg-[#0c0c18] text-white min-h-screen">
+<body>
 
   {% if user is defined and user %}
-  <!-- Sidebar Layout -->
   <div class="flex min-h-screen">
     <!-- Sidebar -->
-    <aside class="w-64 min-h-screen bg-[#0f0f20] border-r border-white/5 flex flex-col flex-shrink-0 fixed top-0 left-0 z-30">
+    <aside class="sidebar w-64 min-h-screen flex flex-col flex-shrink-0 fixed top-0 left-0 z-30">
       <!-- Logo -->
-      <div class="px-6 py-5 border-b border-white/5">
+      <div class="px-6 py-5 flex items-center justify-between" style="border-bottom:1px solid var(--border-sidebar)">
         <a href="/cards/dashboard" class="flex items-center gap-2" style="text-decoration:none">
-          <div class="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
+          <div class="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center flex-shrink-0">
             <span class="text-white text-sm font-bold">SC</span>
           </div>
-          <span style="font-family:'Poppins',sans-serif" class="font-bold text-lg text-white">SocialCard<span class="text-indigo-400">Craft</span></span>
+          <span style="font-family:'Poppins',sans-serif;font-weight:700;font-size:1.1rem" class="sidebar-logo-text">
+            SocialCard<span style="color:#6366f1">Craft</span>
+          </span>
         </a>
+        <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme" id="theme-toggle-btn">☀️</button>
       </div>
 
       <!-- Nav -->
       <nav class="flex-1 px-4 py-5 space-y-1">
-        <p class="px-4 text-xs font-semibold text-slate-600 uppercase tracking-widest mb-3">Main</p>
+        <p class="px-4 text-xs font-semibold sidebar-section-label uppercase tracking-widest mb-3">Main</p>
         <a href="/cards/dashboard" class="sidebar-link {% if request.url.path == '/cards/dashboard' %}active{% endif %}">
           <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
           Dashboard
@@ -159,7 +315,7 @@
 
         {% if user.is_admin %}
         <div class="pt-4">
-          <p class="px-4 text-xs font-semibold text-slate-600 uppercase tracking-widest mb-3">Admin</p>
+          <p class="px-4 text-xs font-semibold sidebar-section-label uppercase tracking-widest mb-3">Admin</p>
           <a href="/admin/" class="sidebar-link {% if '/admin' in request.url.path %}active{% endif %}">
             <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
             Admin Panel
@@ -169,32 +325,33 @@
       </nav>
 
       <!-- User + Plan -->
-      <div class="px-4 py-4 border-t border-white/5">
+      <div class="px-4 py-4" style="border-top:1px solid var(--border-sidebar)">
         {% if user.plan == 'free' %}
-        <div class="mb-3 p-3 rounded-xl" style="background:rgba(99,102,241,0.1);border:1px solid rgba(99,102,241,0.2)">
-          <p class="text-xs font-semibold text-indigo-300 mb-1">Free Plan</p>
-          <div class="w-full rounded-full h-1.5 mb-1" style="background:rgba(255,255,255,0.1)">
-            <div class="h-1.5 rounded-full bg-indigo-400" style="width:{{ [((exports_today or 0) / 3 * 100)|int, 100]|min }}%"></div>
+        <div class="plan-badge-free mb-3 p-3 rounded-xl">
+          <p class="text-xs font-semibold mb-1" style="color:#6366f1">Free Plan</p>
+          <div class="w-full rounded-full h-1.5 mb-1" style="background:var(--border)">
+            <div class="h-1.5 rounded-full" style="background:#6366f1;width:{{ [((exports_today or 0) / 3 * 100)|int, 100]|min }}%"></div>
           </div>
-          <p class="text-xs text-slate-500">{{ exports_today or 0 }}/3 exports today</p>
+          <p class="text-xs" style="color:var(--text-muted)">{{ exports_today or 0 }}/3 exports today</p>
         </div>
         {% else %}
-        <div class="mb-3 p-3 rounded-xl" style="background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.2)">
-          <p class="text-xs font-semibold text-amber-300">⭐ Pro Plan — Unlimited</p>
+        <div class="plan-badge-pro mb-3 p-3 rounded-xl">
+          <p class="text-xs font-semibold" style="color:#d97706">⭐ Pro Plan — Unlimited</p>
         </div>
         {% endif %}
 
         <div class="flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            <div class="w-8 h-8 rounded-full flex items-center justify-center text-indigo-300 text-xs font-bold flex-shrink-0" style="background:rgba(99,102,241,0.3)">
+          <div class="flex items-center gap-2 min-w-0">
+            <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
+              style="background:rgba(99,102,241,0.2);color:#6366f1">
               {{ user.name[0].upper() }}
             </div>
             <div class="min-w-0">
-              <p class="text-xs font-semibold text-white truncate">{{ user.name }}</p>
-              <p class="text-xs text-slate-500 truncate" style="max-width:110px">{{ user.email }}</p>
+              <p class="text-xs font-semibold truncate" style="color:var(--text-primary)">{{ user.name }}</p>
+              <p class="text-xs truncate" style="color:var(--text-muted);max-width:110px">{{ user.email }}</p>
             </div>
           </div>
-          <a href="/auth/logout" class="text-slate-500 hover:text-red-400 transition-colors ml-2" title="Logout">
+          <a href="/auth/logout" style="color:var(--text-muted)" class="hover:text-red-400 transition-colors ml-2 flex-shrink-0" title="Logout">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
           </a>
         </div>
@@ -202,15 +359,46 @@
     </aside>
 
     <!-- Main content -->
-    <main class="flex-1 min-h-screen" style="margin-left:16rem">
+    <main class="flex-1 min-h-screen" style="margin-left:16rem;background:var(--bg-page)">
       {% block content %}{% endblock %}
     </main>
   </div>
 
   {% else %}
-  {% block full_content %}{% endblock %}
+  <!-- Auth pages — full page -->
+  <div style="background:var(--bg-page);min-height:100vh;position:relative">
+    <!-- Theme toggle top-right -->
+    <div style="position:fixed;top:1rem;right:1rem;z-index:50">
+      <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">☀️</button>
+    </div>
+    {% block full_content %}{% endblock %}
+  </div>
   {% endif %}
 
   {% block scripts %}{% endblock %}
+
+  <script>
+    function toggleTheme() {
+      const html = document.documentElement;
+      const current = html.getAttribute('data-theme');
+      const next = current === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', next);
+      localStorage.setItem('scc_theme', next);
+      updateToggleIcon(next);
+    }
+
+    function updateToggleIcon(theme) {
+      document.querySelectorAll('.theme-toggle').forEach(btn => {
+        btn.textContent = theme === 'dark' ? '☀️' : '🌙';
+        btn.title = theme === 'dark' ? 'Switch to Light' : 'Switch to Dark';
+      });
+    }
+
+    // Set correct icon on load
+    document.addEventListener('DOMContentLoaded', function() {
+      const theme = localStorage.getItem('scc_theme') || 'dark';
+      updateToggleIcon(theme);
+    });
+  </script>
 </body>
 </html>
