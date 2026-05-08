@@ -8,7 +8,7 @@ import os
 from dotenv import load_dotenv
 
 from models.database import Base, engine
-from routers import auth, brand_kit, cards, admin, export_history, dashboard
+from routers import auth, brand_kit, cards, admin, export_history, dashboard, ai
 
 load_dotenv()
 
@@ -65,6 +65,7 @@ app.include_router(cards.router)
 app.include_router(admin.router)
 app.include_router(export_history.router)
 app.include_router(dashboard.router)
+app.include_router(ai.router)
 
 
 @app.get("/")
