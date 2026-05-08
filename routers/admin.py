@@ -35,6 +35,7 @@ async def admin_dashboard(
         "admin/dashboard.html",
         {
             "request": request,
+            "user": admin,
             "admin": admin,
             "total_users": total_users,
             "total_exports": total_exports,
@@ -55,7 +56,7 @@ async def admin_users(
     users = db.query(User).order_by(User.created_at.desc()).all()
     return templates.TemplateResponse(
         "admin/users.html",
-        {"request": request, "admin": admin, "users": users},
+        {"request": request, "user": admin, "admin": admin, "users": users},
     )
 
 
@@ -94,5 +95,5 @@ async def admin_jobs(
     jobs = db.query(ExportJob).order_by(ExportJob.created_at.desc()).limit(100).all()
     return templates.TemplateResponse(
         "admin/jobs.html",
-        {"request": request, "admin": admin, "jobs": jobs},
+        {"request": request, "user": admin, "admin": admin, "jobs": jobs},
     )
